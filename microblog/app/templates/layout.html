@@ -1,17 +1,33 @@
-<!doctype html>
-<title>Flaskr</title>
-<link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
-<div class=page>
-  <h1>Flaskr</h1>
-  <div class=metanav>
-  {% if user.email %}
-    <a href="{{ url_for('logout') }}">log out</a>
-  {% else %}
-    <a href="{{ url_for('login') }}">log in</a>
-  {% endif %}
-  </div>
-  {% for message in get_flashed_messages() %}
-    <div class=flash>{{ message }}</div>
-  {% endfor %}
-  {% block body %}{% endblock %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>
+	{% block title %}
+		Fufuka
+	{% endblock %}
+	</title>
+	{% block head %}
+	{% endblock %}
+</head>
+<body>
+	<div id="wrapper">
+	 {% block wrapper %}
+	 		<div id="header">
+				{% block header %}
+			<h1>Fufuka</h1>
+			{% endblock %}
+			</div>
+			<div id="content">
+			{% block content %}
+			<h1>Fufuka</h1>
+			{% endblock %}
+			</div>
+			<div id="footer">
+			{% block footer %}
+			&copy; Copyright 2015 by <a href="http://domain.invalid/">John G. Keto</a>.
+			{% endblock %}
+			</div>
+	{% endblock %}
 </div>
+</body>
+</html>

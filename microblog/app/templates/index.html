@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+{% block head %}
+<link rel="stylesheet" type="style/css" href="{{ style_url }}"/>    
+{% endblock %}
+{% block content %}
+    <p class="important">
+      Welcome to {{ page_title }}
+    </p>
+    {% block zk_clients %}
+        <p>
+            Running zk client on: <a href="/zk">{{ zk_client }}</a>
+        </p>
+    {% endblock %}
+{% endblock %}

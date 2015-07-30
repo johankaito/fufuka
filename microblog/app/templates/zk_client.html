@@ -1,0 +1,47 @@
+{% extends "layout.html" %}
+{% block head %}
+<link rel="stylesheet" type="text/css" href="{{ style_url }}"/>    
+{% endblock %}
+{% block content %}
+<div class="wrapper">
+    <div id="list-items">
+<!--         <div class="test">
+            {% block test%}
+            <p>
+                <a href="/graph">Test</a>
+            </p>
+            {% endblock %}
+        </div> -->
+        <div class="producers">
+            {% block producers%}
+            <p>Producers</p>
+            {% for item in producers %}
+            <li>{{ item }}</li>
+            {% endfor %}
+            {% endblock %}
+        </div>
+        <div class="brokers">
+            {% block brokers%}
+            <p>Brokers</p>
+            {% for item in brokers %}
+            <li>{{ item }}</li>
+            {% endfor %}
+            {% endblock %}
+        </div>
+        <div class="consumers">
+            {% block consumers%}
+            <p>Consumers</p>
+            {% for item in consumers %}
+            <li>{{ item }}</li>
+            {% endfor %}
+            {% endblock %}
+        </div>
+    </div>
+    <div id="d3-frame">
+        <iframe src="/graph" marginwidth="0" marginheight="0" scrolling="no"></iframe>
+    </div>
+    {% block footer %}
+    {% endblock %}
+</div>
+{% endblock %}
+
