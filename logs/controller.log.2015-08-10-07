@@ -1,0 +1,1 @@
+[2015-08-10 07:34:07,734] INFO [SessionExpirationListener on 0], ZK expired; shut down all controller components and try to re-elect (kafka.controller.KafkaController$SessionExpirationListener)

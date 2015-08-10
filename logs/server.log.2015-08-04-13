@@ -1,0 +1,7 @@
+[2015-08-04 14:10:35,925] INFO Closing socket connection to /10.15.100.202. (kafka.network.Processor)
+[2015-08-04 14:10:36,039] INFO [ReplicaFetcherManager on broker 2] Removed fetcher for partitions [_schemas,0] (kafka.server.ReplicaFetcherManager)
+[2015-08-04 14:10:36,043] INFO Completed load of log _schemas-0 with log end offset 0 (kafka.log.Log)
+[2015-08-04 14:10:36,047] INFO Created log for partition [_schemas,0] in /tmp/kafka-logs-2 with properties {segment.index.bytes -> 10485760, file.delete.delay.ms -> 60000, segment.bytes -> 1073741824, flush.ms -> 9223372036854775807, delete.retention.ms -> 86400000, index.interval.bytes -> 4096, retention.bytes -> -1, min.insync.replicas -> 1, cleanup.policy -> compact, unclean.leader.election.enable -> true, segment.ms -> 604800000, max.message.bytes -> 1000012, flush.messages -> 9223372036854775807, min.cleanable.dirty.ratio -> 0.5, retention.ms -> 604800000, segment.jitter.ms -> 0}. (kafka.log.LogManager)
+[2015-08-04 14:10:36,048] WARN Partition [_schemas,0] on broker 2: No checkpointed highwatermark is found for partition [_schemas,0] (kafka.cluster.Partition)
+[2015-08-04 14:10:36,181] INFO Closing socket connection to /10.15.100.202. (kafka.network.Processor)
+[2015-08-04 14:13:47,591] INFO Closing socket connection to /10.15.100.202. (kafka.network.Processor)

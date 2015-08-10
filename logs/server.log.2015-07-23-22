@@ -1,0 +1,8 @@
+[2015-07-24 00:26:54,796] INFO re-registering broker info in ZK for broker 2 (kafka.server.KafkaHealthcheck)
+[2015-07-24 00:26:54,826] INFO Closing socket connection to /10.15.104.47. (kafka.network.Processor)
+[2015-07-24 00:27:03,416] INFO Registered broker 2 at path /brokers/ids/2 with address 10.15.104.47:9093. (kafka.utils.ZkUtils$)
+[2015-07-24 00:27:03,416] INFO done re-registering broker (kafka.server.KafkaHealthcheck)
+[2015-07-24 00:27:03,416] INFO Subscribing to /brokers/topics path to watch for new topics (kafka.server.KafkaHealthcheck)
+[2015-07-24 00:27:03,426] INFO New leader is 0 (kafka.server.ZookeeperLeaderElector$LeaderChangeListener)
+[2015-07-24 00:27:03,526] INFO Closing socket connection to /10.15.104.47. (kafka.network.Processor)
+[2015-07-24 00:27:03,539] INFO Closing socket connection to /10.15.104.47. (kafka.network.Processor)

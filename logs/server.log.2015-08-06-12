@@ -1,0 +1,1 @@
+[2015-08-06 13:37:56,405] INFO Partition [_schemas,0] on broker 2: Shrinking ISR for partition [_schemas,0] from 2,0 to 2 (kafka.cluster.Partition)

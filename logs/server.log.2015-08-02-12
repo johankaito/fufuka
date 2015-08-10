@@ -1,0 +1,6 @@
+[2015-08-03 10:28:30,276] INFO re-registering broker info in ZK for broker 2 (kafka.server.KafkaHealthcheck)
+[2015-08-03 10:28:30,620] INFO Registered broker 2 at path /brokers/ids/2 with address 192.168.1.105:9093. (kafka.utils.ZkUtils$)
+[2015-08-03 10:28:30,621] INFO done re-registering broker (kafka.server.KafkaHealthcheck)
+[2015-08-03 10:28:30,621] INFO Subscribing to /brokers/topics path to watch for new topics (kafka.server.KafkaHealthcheck)
+[2015-08-03 10:28:30,628] INFO 2 successfully elected as leader (kafka.server.ZookeeperLeaderElector)
+[2015-08-03 10:28:30,851] INFO New leader is 2 (kafka.server.ZookeeperLeaderElector$LeaderChangeListener)

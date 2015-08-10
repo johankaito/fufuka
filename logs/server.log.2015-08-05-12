@@ -1,0 +1,1 @@
+[2015-08-05 13:34:08,371] INFO Reconnect due to socket error: java.net.SocketTimeoutException (kafka.consumer.SimpleConsumer)
