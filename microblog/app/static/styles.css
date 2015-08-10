@@ -1,11 +1,13 @@
 
+/*
+START OF: Styling for zk and test;
+*/
 .wrapper {
 	border : 2px solid #000; 
 	overflow:hidden;
 	height:100%;
 }
 
-/* Put pading between wrapper and the div*/
 .wrapper div {
 	min-height: 100px;
 	padding: 10px;
@@ -19,7 +21,7 @@
 	border-right:2px solid #000;
 }
 
-#d3-frame{
+#digraph-frame{
 	background-color: white;
 	overflow:hidden;
 	margin:10px;
@@ -28,7 +30,7 @@
 	height:100%;
 }
 
-#d3-frame iframe {
+#digraph-frame iframe {
 	height: 900px;
 	width: 900px;
 }
@@ -43,3 +45,124 @@
     bottom:0;
     z-index:999999;
 }
+
+.text-area {
+	margin: 0px;
+	width: 990px;
+	height: 120px;
+}
+
+#topic-text-area {
+	margin: 0px;
+	width: 990px;
+	height: 120px;
+}
+
+/*
+END OF: Styling for zk and test;
+*/
+
+/*
+START OF: Styling for the d3 graph
+*/
+
+.link {
+  fill: none;
+  stroke: #666;
+  stroke-width: 1.5px;
+}
+
+#licensing {
+  fill: green;
+}
+
+.link.licensing {
+  stroke: green;
+}
+
+.link.resolved {
+  stroke-dasharray: 0,2 1;
+}
+
+circle {
+  fill: #ccc;
+  stroke: #333;
+  stroke-width: 1.5px;
+}
+
+circle:hover{
+	fill:blue;
+}
+
+text {
+  font: 15px sans-serif;
+  pointer-events: none;
+  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
+}
+
+/*Tooltip styling*/
+.d3-tip {
+  line-height: 1;
+  /*font-weight: bold;*/
+  /*padding: 12px;*/
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  border-radius: 0px;
+}
+
+/* Creates a small triangle extender for the tooltip */
+.d3-tip:after {
+  box-sizing: border-box;
+  display: inline;
+  font-size: 10px;
+  width: 100%;
+  line-height: 1;
+  color: rgba(0, 0, 0, 0.8);
+  content: "\25BC";
+  position: absolute;
+  text-align: center;
+}
+
+/* Style northward tooltips differently */
+.d3-tip.n:after {
+  margin: -1px 0 0 0;
+  top: 100%;
+  left: 0;
+}
+
+/* Style the unordered list inside*/
+ul {
+  list-style-type:none;
+  padding:15px;
+}
+
+/* Style the list items in ul*/
+/* This include all the nodes*/
+ul li {
+  font-size: 12px;
+}
+
+/* Style for all the topics' tip*/
+.tip-heading{
+  font-size: 12px;
+  text-align: center;
+}
+
+.messages tr td{
+  font-size: 10px;
+}
+
+.messages #messages-heading{
+  font-size: 12px;
+}
+
+.bytes tr td{
+  font-size: 10px;
+}
+
+.bytes #bytes-heading{
+  font-size: 12px;
+}
+/*
+END OF: Styling for the d3 graph
+*/

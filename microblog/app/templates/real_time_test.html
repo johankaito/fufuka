@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+{% block head %}
+{% endblock %}
+{% block content %}
+<div class="wrapper">
+    <div class="text-area">
+        <textarea id="topic-text-area" src="/real_time_test"></textarea>
+    </div>
+    {% block footer %}
+    {% endblock %}
+</div>
+    <script>
+    $(document).ready(function(){
+        var r = {{ r }}
+        console.log("Got the r: " + r.content);
+        $('textarea').text(JSON.stringify(r.content));
+});
+
+    </script>
+{% endblock %}
+

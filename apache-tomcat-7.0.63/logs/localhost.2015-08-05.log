@@ -1,0 +1,24 @@
+Aug 05, 2015 11:29:00 AM org.apache.catalina.core.ApplicationContext log
+INFO: jolokia-agent: No access restrictor found at classpath:/jolokia-access.xml, access to all MBeans is allowed
+Aug 05, 2015 11:29:01 AM org.apache.catalina.core.ApplicationContext log
+INFO: ContextListener: contextInitialized()
+Aug 05, 2015 11:29:01 AM org.apache.catalina.core.ApplicationContext log
+INFO: SessionListener: contextInitialized()
+Aug 05, 2015 11:29:01 AM org.apache.catalina.core.ApplicationContext log
+INFO: ContextListener: attributeAdded('org.apache.jasper.compiler.TldLocationsCache', 'org.apache.jasper.compiler.TldLocationsCache@604b6355')
+Aug 05, 2015 11:32:27 AM org.apache.catalina.core.ApplicationContext log
+INFO: SessionListener: contextDestroyed()
+Aug 05, 2015 11:32:27 AM org.apache.catalina.core.ApplicationContext log
+INFO: ContextListener: contextDestroyed()
+Aug 05, 2015 11:32:42 AM org.apache.catalina.core.ApplicationContext log
+INFO: jolokia-agent: No access restrictor found at classpath:/jolokia-access.xml, access to all MBeans is allowed
+Aug 05, 2015 11:32:42 AM org.apache.catalina.core.ApplicationContext log
+INFO: ContextListener: contextInitialized()
+Aug 05, 2015 11:32:42 AM org.apache.catalina.core.ApplicationContext log
+INFO: SessionListener: contextInitialized()
+Aug 05, 2015 11:32:42 AM org.apache.catalina.core.ApplicationContext log
+INFO: ContextListener: attributeAdded('org.apache.jasper.compiler.TldLocationsCache', 'org.apache.jasper.compiler.TldLocationsCache@604b6355')
+Aug 05, 2015 12:04:04 PM org.apache.catalina.core.ApplicationContext log
+INFO: SessionListener: contextDestroyed()
+Aug 05, 2015 12:04:04 PM org.apache.catalina.core.ApplicationContext log
+INFO: ContextListener: contextDestroyed()

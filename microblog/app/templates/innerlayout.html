@@ -1,0 +1,40 @@
+<!-- 
+BASE html for all the INNER ebpages (IFRAMES)
+ -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>
+	{% block title %}
+	{% endblock %}
+	</title>
+	{% block head %}
+	<link rel="stylesheet" type="text/css" href="/static/styles.css"/>    
+	{% endblock %}
+</head>
+<body>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+	<div id="wrapper">
+	 {% block wrapper %}
+	 		<div id="header">
+				{% block header %}
+			<h1>
+				<a href="/">Fufuka</a>
+			</h1>
+			{% endblock %}
+			</div>
+			<div id="content">
+			{% block content %}
+			<h1>Fufuka</h1>
+			{% endblock %}
+			</div>
+			<div id="footer">
+			{% block footer %}
+			&copy; Copyright 2015 by <a href="http://domain.invalid/">John G. Keto</a>.
+			{% endblock %}
+			</div>
+	{% endblock %}
+</div>
+</body>
+</html>

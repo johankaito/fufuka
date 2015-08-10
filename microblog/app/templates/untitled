@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<link rel="stylesheet" type="text/css" href="/static/styles.css"/>    
+<body>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
+  <script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
+  <script>
+//Get kafka topics
+var topics = {{ json_topics }};
+
+//Array of object held for update 
+//
+//Contains: name. count(total msgs), one minute rate(msgs in per sec), mean rate (msgs in per sec), timetamp(time since epoch)
+var t_objects = []
+var jolokia_ports = [8778,8779];
+var tmp2 = "}";
+var count;
+var name;
+var mean_rate;
+var one_min_rate;
+
+//Get the latest JMX data
+setInterval(function(){
+ function obtainedResult(data) {
+        //Log the data
+        //console.log(data);
+        
+        //Get the JSON format
+        ret = JSON.parse(data).value;
+        //console.log(ret);
+        ret_str = JSON.stringify(ret);
+
+        //Get msg, 
+        for(i=0; i<topics.length; i++){
+        //Name of object
+        name = topics[i];
+        //console.log("Parsing for: " + name);
+
+        //String holder for all the topics to edit
+        var tmp = "kafka.server:name=MessagesInPerSec,topic=" + name +",type=BrokerTopicMetrics"
+        
+        //console.log("tmp is: " + tmp);
+        var startIndex = ret_str.indexOf(tmp);
+        //console.log("Start is: " + startIndex);
+        //Make sure the topic is in this set of obtained data
+        if( startIndex >= 0){
+          //console.log("Topic in this set!")
+          //If it is, continue
+          //Create the json object
+          var t_obj = {};
+          var endIndex = ret_str.indexOf(tmp2,startIndex) + tmp2.length;
+          var res = ret_str.substring(startIndex, endIndex);
+
+          //Get the count (total msgs)
+          count = getTotalMsgs(res);
+          //console.log("Count: " + count);
+
+          //Get the mean rate
+          mean_rate = getMsgRate(0, res);
+          //console.log("Mean rate: " + mean_rate);
+
+          //Get the one minute rate
+          one_min_rate = getMsgRate(1, res);
+          //console.log("One min rate: " + one_min_rate);
+
+          //Get the time stamp
+          timestamp = getTimeStamp(res);
+          //console.log(res);
+
+          //Add the values to the t_object
+          t_obj.count = count;
+          t_obj.mean_rate = mean_rate;
+          t_obj.one_min_rate = one_min_rate;
+          t_obj.timestamp = timestamp;
+
+          //Add the tobject to the tarray
+          t_objects.push(t_obj);
+
+        }else{
+          //console.log("Sorry! Topic not in this set.");
+        }
+        // console.log("Start index is: " + startIndex);
+        // console.log("End index is: " +endIndex);
+
+      }
+    }
+
+    function getMsgRate(window, input){
+      if( window == 1){
+        //One minute rate
+        tmp = "\"OneMinuteRate\":";
+        var start = input.indexOf(tmp) + tmp.length;
+        var end = input.indexOf(",",start);
+        res = input.substring(start, end);
+        //console.log("Count is: " + res);
+        return res;
+      }else if( window == 5){
+        //Five minute rate
+        tmp = "\"FiveMinuteRate\":";
+        var start = input.indexOf(tmp) + tmp.length;
+        var end = input.indexOf(",",start);
+        res = input.substring(start, end);
+        //console.log("Count is: " + res);
+        return res;
+      }else if( window == 15){
+        //Fifteen minute rate
+        tmp = "\"FifteenMinuteRate\":";
+        var start = input.indexOf(tmp) + tmp.length;
+        var end = input.indexOf(",",start);
+        res = input.substring(start, end);
+        //console.log("Count is: " + res);
+        return res;      
+      }else if( window == 0){
+        //Mean rate
+        tmp = "\"MeanRate\":";
+        var start = input.indexOf(tmp) + tmp.length;
+        var end = input.indexOf("}",start);
+        res = input.substring(start, end);
+        //console.log("Count is: " + res);
+        return res;      
+      }else{
+        return 0;
+      }
+    }
+
+    function getTimeStamp(input){
+      //Mean rate
+      tmp = "\"timestamp\":";
+      var start = input.indexOf(tmp) + tmp.length;
+      var end = input.indexOf(",",start);
+      res = input.substring(start, end);
+        //console.log("Count is: " + res);
+        return res;  
+      }
+
+      function getTotalMsgs(input){
+        tmp = "\"Count\":";
+        var start = input.indexOf(tmp) + tmp.length;
+        var end = input.indexOf(",",start);
+        res = input.substring(start, end);
+      //console.log("Count is: " + res);
+      return res;
+    }
+
+    $.each(jolokia_ports, function(i,u){
+      //console.log("Listening in port: " + u);
+      $.ajax(
+      {
+        url: "http://127.0.0.1:" + u + "/jolokia/read/kafka.server:type=BrokerTopicMetrics,name=MessagesInPerSec,topic=*",
+        type: "get",
+        datatype:"json",        
+        success: function(response){
+        // Execute our callback function
+        //console.log("Heard from port: " + u);
+        obtainedResult(response);
+      }
+    });
+    });
+  }, 3000);
+
+
+
+/*
+*
+*
+*     D3 GRAPHING STUFF
+*
+*
+*/
+// http://blog.thomsonreuters.com/index.php/mobile-patent-suits-graphic-of-the-day/
+var links = {{ json_data }};
+var nodes = {};
+
+//Position the rootnode
+var rootX = 10, rootY = 100;
+
+// Compute the distinct nodes from the links.
+links.forEach(function(link) {
+  //console.log(link.source + ":" + link.type);
+  if( link.type != null ){
+    //At root node
+    link.source = nodes[link.source] || (nodes[link.source] = {name: link.source, type: link.type, fixed: true, x: rootX, y: rootY}); 
+  }else{
+    link.source = nodes[link.source] || (nodes[link.source] = {name: link.source, type: link.type}); 
+  }
+
+  link.target = nodes[link.target] || (nodes[link.target] = {name: link.target, type: link.type});
+});
+
+// testNodes = d3.values(nodes);
+// testNodes.forEach(function(tN){
+//   console.log("" + tN.name + ":" + tN.type);
+// })
+
+var width = 960,
+height = 500;
+
+var force = d3.layout.force()
+.nodes(d3.values(nodes))
+.links(links)
+.size([width, height])
+.linkDistance(100) //60
+.charge(-300)
+.on("tick", tick)
+.start();
+
+
+var svg = d3.select("body").append("svg")
+.attr("width", width)
+.attr("height", height);
+
+// Per-type markers, as they don't inherit styles.
+// build the arrow.
+svg.append("svg:defs").selectAll("marker")
+.data(["end"])
+.enter().append("svg:marker")
+.attr("id", function(d) { return d; })
+.attr("viewBox", "0 -5 10 10")
+.attr("refX", 15)
+.attr("refY", -1.5)
+.attr("markerWidth", 6)
+.attr("markerHeight", 6)
+.attr("orient", "auto")
+.append("svg:path")
+.attr("d", "M0,-5L10,0L0,5");
+
+/*  Create the link between nodes */
+var path = svg.append("svg:g").selectAll("path")
+.data(force.links())
+.enter().append("svg:path")
+.attr("class", "link")//function(d) { return "link " + d.type; })
+.attr("marker-end", "url(#end)");//function(d) { return "url(#" + d.type + ")"; });
+
+// Create the actual nodes */
+var circle = svg.append("g").selectAll("circle")
+.data(force.nodes())
+.enter().append("circle")
+.attr("r", 6)//6
+// Set the color of the root node to be red so it is noticeable
+.style("fill", function (node) { 
+  //console.log("in fill. node type is: "+ node.type)
+  if(node.name == 'root')
+    return '#d62728'; //RED
+  if(node.type == 'topic')
+    return '#6baed6'; //BLUE
+  if(node.type == 'producer')
+    return '#d62728'; //'#31a354'; //GREEN
+  if(node.type == 'consumer-producer')
+    return '#d62728'; //'#31a354'; //GREEN
+})
+.attr("nodes", function(node){
+  //console.log("in new function " + node.name);
+  return node;
+}) 
+.call(force.drag); // This makes the circles draggable
+
+var text = svg.append("g").selectAll("text")
+.data(force.nodes())
+.enter().append("text")
+.attr("x", 8)
+.attr("y", ".31em")
+// .text(function(d) { 
+//   console.log("d name is: " + d.name);
+//   console.log("size of objects is: " + t_objects.length);
+//   for( i=0; i<t_objects.length;i++){
+//     t = t_objects[i];
+//     console.log("Checking for: " + t.name);
+//     if(t.name == d.name){
+//       return t.timestamp;
+//     } 
+//   }
+// });
+.text(function(d) { 
+  return d.name; 
+});
+// Use elliptical arc path segments to doubly-encode directionality.
+function tick() {
+  path.attr("d", linkArc);
+  circle.attr("transform", transform);
+  text.attr("transform", transform);
+}
+
+function linkArc(d) {
+  var dx = d.target.x - d.source.x,
+  dy = d.target.y - d.source.y,
+      //dr = Math.sqrt(dx * dx + dy * dy); // CURVED
+      dr = 0; // STRAIGHT
+      return "M" + d.source.x + "," + d.source.y + "A" + dr + "," + dr + " 0 0,1 " + d.target.x + "," + d.target.y;
+    }
+
+    function transform(d) {
+      return "translate(" + d.x + "," + d.y + ")";
+    }
+
+    </script>

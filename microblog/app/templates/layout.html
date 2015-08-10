@@ -1,3 +1,7 @@
+<!-- 
+BASE html for all the webpages
+ -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,14 +11,18 @@
 	{% endblock %}
 	</title>
 	{% block head %}
+	<link rel="stylesheet" type="text/css" href="/static/styles.css"/>    
 	{% endblock %}
 </head>
 <body>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 	<div id="wrapper">
 	 {% block wrapper %}
 	 		<div id="header">
 				{% block header %}
-			<h1>Fufuka</h1>
+			<h1>
+				<a href="/">Fufuka</a>
+			</h1>
 			{% endblock %}
 			</div>
 			<div id="content">

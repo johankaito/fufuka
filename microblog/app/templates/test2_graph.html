@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<link rel="stylesheet" type="text/css" href="/static/styles.css"/>    
+<body>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
+	<script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
+	<script>
+
+/*
+*
+*
+*     D3 GRAPHING STUFF
+*
+*
+*/
+// http://blog.thomsonreuters.com/index.php/mobile-patent-suits-graphic-of-the-day/
+var links = {{ json_data }};
+var nodes = {};
+var curTop = "";
+//Get the data on
+var nodes_data = {{ json_nodes }};
+//console.log(nodes_data);
+//var nodes_data_json = JSON.parse(nodes_data);
+
+var node_positions = {};
+var node_objects = nodes_data;
+
+for(i=0; i<nodes_data.length; i++){
+  //node_obj = {};
+  //console.log("Added: " + node_objects[i].name + " type: " + node_objects[i].type);
+  node_positions[nodes_data[i].name] = i;
+}
+
+//Position the rootnode
+var rootX = 10, rootY = 500;
+
+// Compute the distinct nodes from the links.
+links.forEach(function(link) {
+	//console.log(link.source + ":" + link.type);
+	if( link.type != null ){
+		//At root node
+		link.source = nodes[link.source] || (nodes[link.source] = {name: link.source, type: link.type, fixed: true, x: rootX, y: rootY}); 
+	}else{
+		link.source = nodes[link.source] || (nodes[link.source] = {name: link.source, type: link.type}); 
+	}
+
+	link.target = nodes[link.target] || (nodes[link.target] = {name: link.target, type: link.type});
+});
+
+// testNodes = d3.values(nodes);
+// testNodes.forEach(function(tN){
+//   console.log("" + tN.name + ":" + tN.type);
+// })
+
+var width = 960,
+height = 960;
+
+var force = d3.layout.force()
+.nodes(d3.values(nodes))
+.links(links)
+.size([width, height])
+.linkDistance(100) //60
+.charge(-300)
+.on("tick", tick)
+.start();
+
+
+var svg = d3.select("body").append("svg")
+.attr("width", width)
+.attr("height", height);
+
+// Per-type markers, as they don't inherit styles.
+// build the arrow.
+svg.append("svg:defs").selectAll("marker")
+.data(["end"])
+.enter().append("svg:marker")
+.attr("id", function(d) { return d; })
+.attr("viewBox", "0 -5 10 10")
+.attr("refX", 15)
+.attr("refY", -1.5)
+.attr("markerWidth", 6)
+.attr("markerHeight", 6)
+.attr("orient", "auto")
+.append("svg:path")
+.attr("d", "M0,-5L10,0L0,5");
+
+
+/*  Create the link between nodes */
+var path = svg.append("svg:g").selectAll("path")
+.data(force.links())
+.enter().append("svg:path")
+.attr("class", "link")//function(d) { return "link " + d.type; })
+.attr("marker-end", "url(#end)");//function(d) { return "url(#" + d.type + ")"; });
+
+// The tool tip
+var tip = d3.tip()
+.attr('class', 'd3-tip')
+.offset([-10, 0])
+.html(function(d){
+  console.log("Sending: " + d.name );
+  return determineTipResult(d);
+});
+
+function updateTip(tip, element){
+  tip.html(function(element){
+    return determineTipResult(element);
+  });
+}
+
+function determineTipResult(d){
+    console.log("Requested: " + d.name);
+
+    //Keep track of the currently selected node
+    curTop = d.name;
+   n = node_objects[node_positions[d.name]];
+   //console.log("Got: " + n.name + " type: " + n.type);
+   if( n.type == "topic"){
+    // return "<ul class=\"topic\"><li>Name: <span id=\"name\" style='color:red'>" + n.name + "</span></li><li>Type: <span id=\"type\" style='color:red'>" + n.type + "</span></li><li>One_Minute_Rate(msgs/s): <span id=\"oneminuterate\" style='color:red'>" + n.one_min_rate + "</span></li><li>MeanRate: <span id=\"meanrate\" style='color:red'>" + n.mean_rate + "</span></li><li>Total_Messages: <span id=\"count\" style='color:red'>" + n.count + "</span></li><li>ConnectedServers: <span id=\"weight\" style='color:red'>" + n.weight + "</span></li><li>Timestamp: <span id=\"timestamp\" style='color:red'>" + n.timestamp + "</span></li></ul>";
+    return "<h3 class=\"tip-heading\">Topic: " + n.name + "</h3><table class=\"messages\" border=\"1\"><caption id=\"messages-heading\">Messages</caption><tr><td>Per second</td><td>In</td><td>Out</td></tr><tr><td>One_Min_Rate</td><td><span id=\"oneminuterate\" style='color:red'>" + n.msg_one_min_rate + "</td><td></td></tr><tr><td>Count</td><td><span id=\"count\" style='color:red'>" + n.msg_count + "</td><td></td></tr><tr><td>Mean_Rate</td><td><span id=\"meanrate\" style='color:red'>" + n.msg_mean_rate + "</td><td></td></tr></table><table class=\"bytes\" border=\"1\"><caption id=\"bytes-heading\">Bytes</caption><tr><td>Per second</td><td>In</td><td>Out</td></tr><tr><td>One_Min_Rate</td><td><span id=\"inoneminuterate\" style='color:red'>" + n.in_byte_one_min_rate + "</td><td><span id=\"outoneminuterate\" style='color:red'>" + n.out_byte_one_min_rate + "</td></tr><tr><td>Count</td><td><span id=\"incount\" style='color:red'>" + n.in_byte_count + "</td><td><span id=\"incount\" style='color:red'>" + n.out_byte_count + "</td></tr><tr><td>Mean_Rate</td><td><span id=\"inmeanrate\" style='color:red'>" + n.in_byte_mean_rate + "</td><td><span id=\"outmeanrate\" style='color:red'>" + n.out_byte_mean_rate + "</td></tr></table>";
+  }
+  else if( n.type == "consumer_producer"){
+  return "<ul class=\"consumer_producer\"><li>Name: <span style='color:red'>" + n.name + "</span></li><li>Type: <span style='color:red'>" + n.type + "</span></li><li>Consumes from: <span style='color:red'>" + n.getsfrom + "</span></li><li>Produces to: <span style='color:red'>" + n.poststo + "</span></li><li>Neighbors: <span style='color:red'>" + n.weight + "</span></li></ul>";
+  }
+  else if( n.type == "consumer"){
+    return "<ul class=\"consumer\"><li>Name: <span style='color:red'>" + n.name + "</span></li><li>Type: <span style='color:red'>" + n.type + "</span></li><li>Consumes from: <span style='color:red'>" + n.getsfrom + "</span></li><li>Neighbors: <span style='color:red'>" + n.weight + "</span></li></ul>";
+  }
+  else if( n.type == "producer"){
+    return "<ul class=\"producer\"><li>Name: <span style='color:red'>" + n.name + "</span></li><li>Type: <span style='color:red'>" + n.type + "</span></li><li>Produces to: <span style='color:red'>" + n.poststo + "</span></li><li>Neighbors: <span style='color:red'>" + n.weight + "</span></li></ul>";
+  }
+  else if( n.type == "root"){
+     return "<ul id=\"root\"><li>Name: <span style='color:red'>" + n.name + "</span></li><li>zk_host: <span style='color:red'>" + n.zkhost + ":" + n.zkport + "</span></li></ul>";
+  }
+}
+
+
+//Call the tool tip
+svg.call(tip);
+
+// Create the actual nodes */
+var circle = svg.append("g").selectAll("circle")
+.data(force.nodes())
+.enter().append("circle")
+.attr("r", 6)//6
+.attr('id', 'circles')
+.style("fill", function (node) { 
+	//console.log("in fill. node type is: "+ node.name)
+	if(node.name == 'root')
+		return '#d62728'; //RED
+	if(node.type == 'topic')
+		return '#6baed6'; //BLUE
+	if(node.type == 'producer')
+		return '#d62728'; //'#31a354'; //GREEN
+	if(node.type == 'consumer-producer')
+		return '#d62728'; //'#31a354'; //GREEN
+})
+.attr("nodes", function(node){
+	//console.log("in new function " + node.name);
+	return node;
+}) 
+.on('mouseover', 
+  function(d){
+    tip.show(d);
+})
+.on('mouseout', tip.hide)
+.call(force.drag); // This makes the circles draggable
+
+
+// Displays the name of the node
+var text = svg.append("g").selectAll("text")
+.data(force.nodes())
+.enter().append("text")
+.attr("x", 8)
+.attr("y", ".31em")
+.text(function(d) { 
+	return d.name; 
+});
+
+// Use elliptical arc path segments to doubly-encode directionality.
+function tick() {
+	path.attr("d", linkArc);
+	circle.attr("transform", transform);
+	text.attr("transform", transform);
+}
+
+function linkArc(d) {
+	var dx = d.target.x - d.source.x,
+	dy = d.target.y - d.source.y,
+			//dr = Math.sqrt(dx * dx + dy * dy); // CURVED
+			dr = 0; // STRAIGHT
+			return "M" + d.source.x + "," + d.source.y + "A" + dr + "," + dr + " 0 0,1 " + d.target.x + "," + d.target.y;
+		}
+
+		function transform(d) {
+			return "translate(" + d.x + "," + d.y + ")";
+		}
+
+/*
+*
+*
+*     END OF D3 GRAPHING STUFF
+*
+*
+*/
+
+
+
+
+
+//Get kafka topics
+var topics = {{ json_topics }};
+// console.log("Topics received ")
+// for(i=0; i<topics.length; i++){
+//  console.log(topics[i]);
+// }
+//Array of object held for update 
+//
+//Contains: name. count(total msgs), one minute rate(msgs in per sec), mean rate (msgs in per sec), timetamp(time since epoch)
+// Array stored the latest information on all the topics
+var t_objects = [topics.length];
+var t_positions = {};
+for(i=0; i<topics.length; i++){
+  //t_obj = {};
+  t_positions[topics[i]] = i;
+}
+// console.log("Testing: ");
+// console.log(t_positions.t7);
+
+//Ports where Jolokia is running: Determined in kafka servers
+var jolokia_ports = [8780,8779];
+var tmp2 = "}";
+
+//The ip address to fetch REST from
+var host = {{ host }};
+//console.log()
+//console.log("obtained: " + host.ip);
+
+//var zkhost = {{ zk_host }};
+//var zkport = {{ zk_port }};
+
+
+//Get the latest JMX data
+function obtainedResult(data, type) {
+  //Log the data
+  //console.log("Data for: " + type);
+  
+  var count;
+  var name;
+  var mean_rate;
+  var one_min_rate;
+
+  //Get the JSON format
+  ret = JSON.parse(data).value;
+  var timestamp = JSON.parse(data).timestamp;
+  //console.log(ret);
+  ret_str = JSON.stringify(ret);
+
+  //Get msg, 
+  //console.log("length of topics: " + topics.length);
+  for(i=0; i<topics.length; i++){
+    //Name of object
+    name = topics[i];
+
+    if( type == "msgsin"){
+      var tmp1 = "kafka.server:name=MessagesInPerSec,topic=" + name +",type=BrokerTopicMetrics";
+      var startIndex = ret_str.indexOf(tmp1);
+
+      if( startIndex >= 0){     
+        var t_obj = {};
+        var endIndex = ret_str.indexOf(tmp2,startIndex) + tmp2.length;
+        var res = ret_str.substring(startIndex, endIndex);
+      }else{
+        continue;
+      }
+      //Get the count (total msgs)
+      //console.log("Updating msgs");
+      msg_count = getTotal(res);
+      //console.log("Total msgs are: " + msg_count);
+
+      //Get the mean rate
+      msg_mean_rate = getRate(0, res);
+      //console.log("Mean rate: " + mean_rate);
+
+      //Get the one minute rate
+      msg_one_min_rate = getRate(1, res);
+
+      // Get the object to it's natural position
+      t_obj = node_objects[node_positions[name]];
+
+      //Add the values to the t_object
+      //t_obj.name = name;
+      t_obj.msg_count = msg_count;
+      t_obj.msg_mean_rate = msg_mean_rate;
+      t_obj.msg_one_min_rate = msg_one_min_rate;
+      t_obj.timestamp = new Date(timestamp);
+
+      // Add object to it's natural position
+      node_objects[node_positions[name]] = t_obj;
+
+      // if( curTop == name){
+      // $(".topic").replaceWith("<ul class=\"topic\"><li>Name: <span style='color:red'>" + t_obj.name + "</span></li><li>Type: <span style='color:red'>" + t_obj.type + "</span></li><li>One_Minute_Rate(msgs/s): <span style='color:red'>" + t_obj.one_min_rate + "</span></li><li>MeanRate: <span style='color:red'>" + t_obj.mean_rate + "</span></li><li>Total_Messages: <span style='color:red'>" + t_obj.count + "</span></li><li>ConnectedServers: <span style='color:red'>" + t_obj.weight + "</span></li><li>Timestamp: <span style='color:red'>" + t_obj.timestamp + "</span></li></ul>");
+      // }
+
+      if( curTop == name){
+        $(".messages #count").text(t_obj.msg_count);
+        $(".messages #meanrate").text(t_obj.msg_mean_rate);
+        $(".messages #oneminuterate").text(t_obj.msg_one_min_rate);
+        $(".tip-heading").text("Topic: " + t_obj.name); //+ " ->" + t_obj.timestamp);
+      }
+    }
+    // console.log("Right topic, before if");
+    if( type == "bytesin"){
+      //console.log("In bytes in");
+      var tmp1 = "kafka.server:name=BytesInPerSec,topic=" + name +",type=BrokerTopicMetrics";
+      var startIndex = ret_str.indexOf(tmp1);
+
+      if( startIndex >= 0){     
+        var t_obj = {};
+        var endIndex = ret_str.indexOf(tmp2,startIndex) + tmp2.length;
+        var res = ret_str.substring(startIndex, endIndex);
+      }else{
+        continue;
+      }
+      //console.log("Bytes in: Right topic");
+      //Get the count (total msgs)
+      //console.log("Updating bytes");
+      in_byte_count = getTotal(res);
+      //console.log("Total bounts are: " + byte_count);
+      //console.log("Count: " + count);
+
+      //Get the mean rate
+      in_byte_mean_rate = getRate(0, res);
+      //console.log("Mean rate: " + mean_rate);
+
+      //Get the one minute rate
+      in_byte_one_min_rate = getRate(1, res);
+
+      // Get the object to it's natural position
+      t_obj = node_objects[node_positions[name]];
+
+      //Add the values to the t_object
+      //t_obj.name = name;
+      t_obj.in_byte_count = in_byte_count;
+      t_obj.in_byte_mean_rate = in_byte_mean_rate;
+      t_obj.in_byte_one_min_rate = in_byte_one_min_rate;
+      t_obj.timestamp = new Date(timestamp);
+
+      // Add object to it's natural position
+      node_objects[node_positions[name]] = t_obj;
+
+      if( curTop == name){
+        $(".bytes #incount").text(t_obj.in_byte_count);
+        $(".bytes #inmeanrate").text(t_obj.in_byte_mean_rate);
+        $(".bytes #inoneminuterate").text(t_obj.in_byte_one_min_rate);
+        $(".tip-heading").text("Topic: " + t_obj.name); //+ " ->" + t_obj.timestamp);
+      }
+    }
+
+    if( type == "bytesout"){
+      //console.log("In bytes in");
+      var tmp1 = "kafka.server:name=BytesOutPerSec,topic=" + name +",type=BrokerTopicMetrics";
+      var startIndex = ret_str.indexOf(tmp1);
+
+      if( startIndex >= 0){     
+        var t_obj = {};
+        var endIndex = ret_str.indexOf(tmp2,startIndex) + tmp2.length;
+        var res = ret_str.substring(startIndex, endIndex);
+      }else{
+        continue;
+      }
+      //console.log("Bytes in: Right topic");
+      //Get the count (total msgs)
+      //console.log("Updating bytes");
+      out_byte_count = getTotal(res);
+      //console.log("Total bounts are: " + byte_count);
+      //console.log("Count: " + count);
+
+      //Get the mean rate
+      out_byte_mean_rate = getRate(0, res);
+      //console.log("Mean rate: " + mean_rate);
+
+      //Get the one minute rate
+      out_byte_one_min_rate = getRate(1, res);
+
+      // Get the object to it's natural position
+      t_obj = node_objects[node_positions[name]];
+
+      //Add the values to the t_object
+      //t_obj.name = name;
+      t_obj.out_byte_count = out_byte_count;
+      t_obj.out_byte_mean_rate = out_byte_mean_rate;
+      t_obj.out_byte_one_min_rate = out_byte_one_min_rate;
+      t_obj.timestamp = new Date(timestamp);
+
+      // Add object to it's natural position
+      node_objects[node_positions[name]] = t_obj;
+
+      if( curTop == name){
+        $(".bytes #outcount").text(t_obj.out_byte_count);
+        $(".bytes #outmeanrate").text(t_obj.out_byte_mean_rate);
+        $(".bytes #outoneminuterate").text(t_obj.out_byte_one_min_rate);
+        $(".tip-heading").text("Topic: " + t_obj.name); //+ " ->" + t_obj.timestamp);
+      }
+    }
+  }
+}
+
+function getRate(window, input){
+   if( window == 1){
+    //One minute rate
+    tmp = "\"OneMinuteRate\":";
+    var start = input.indexOf(tmp) + tmp.length;
+    var end = input.indexOf(",",start);
+    res = input.substring(start, end);
+    //console.log("Count is: " + res);
+    return res;
+  }else if( window == 5){
+    //Five minute rate
+    tmp = "\"FiveMinuteRate\":";
+    var start = input.indexOf(tmp) + tmp.length;
+    var end = input.indexOf(",",start);
+    res = input.substring(start, end);
+    //console.log("Count is: " + res);
+    return res;
+  }else if( window == 15){
+    //Fifteen minute rate
+    tmp = "\"FifteenMinuteRate\":";
+    var start = input.indexOf(tmp) + tmp.length;
+    var end = input.indexOf(",",start);
+    res = input.substring(start, end);
+    //console.log("Count is: " + res);
+    return res;      
+  }else if( window == 0){
+    //Mean rate
+    tmp = "\"MeanRate\":";
+    var start = input.indexOf(tmp) + tmp.length;
+    var end = input.indexOf("}",start);
+    res = input.substring(start, end);
+    //console.log("Count is: " + res);
+    return res;      
+  }else{
+    return 0;
+  }
+}
+
+function getTimeStamp(input){
+  //Mean rate
+  tmp = "\"timestamp\":";
+  var start = input.indexOf(tmp) + tmp.length;
+  var end = input.indexOf(",",start);
+  res = input.substring(start, end);
+  console.log("Count is: " + res);
+  return res;  
+}
+
+function getTotal(input){
+  tmp = "\"Count\":";
+  var start = input.indexOf(tmp) + tmp.length;
+  var end = input.indexOf(",",start);
+  res = input.substring(start, end);
+  //console.log("Count is: " + res);
+  return res;
+}
+
+//Make call to REST api every x seconds
+setInterval(function(){
+  $.each(jolokia_ports, function(i,u){
+       //console.log("Listening in port: " + u);
+       //Get the messages in information
+       $.ajax(
+       {
+        //console.log("Calling: " + host + ":" + u);
+        url: "http://" + host.ip + ":" + u + "/jolokia/read/kafka.server:type=BrokerTopicMetrics,name=MessagesInPerSec,topic=*",
+        type: "get",
+        datatype:"json",        
+        success: function(response){
+        obtainedResult(response, "msgsin");
+        //console.log("New msgs infor");
+          }
+        });
+      //Get the bytes in information
+      $.ajax(
+       {
+        //console.log("Calling: " + host + ":" + u);
+        url: "http://" + host.ip + ":" + u + "/jolokia/read/kafka.server:type=BrokerTopicMetrics,name=BytesInPerSec,topic=*",
+        type: "get",
+        datatype:"json",        
+        success: function(response){
+        obtainedResult(response, "bytesin");
+        //console.log("New bytes infor");
+      }
+      });
+      //Get the bytes out information
+      $.ajax(
+       {
+        //console.log("Calling: " + host + ":" + u);
+        url: "http://" + host.ip + ":" + u + "/jolokia/read/kafka.server:type=BrokerTopicMetrics,name=BytesOutPerSec,topic=*",
+        type: "get",
+        datatype:"json",        
+        success: function(response){
+        obtainedResult(response, "bytesout");
+      }
+    });
+     });
+}, 1000);
+
+//Refresh the tooltip so that changes are seen in real time
+
+
+</script>
+
+
+<!-- SAMPLE1 for output style -->

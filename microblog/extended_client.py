@@ -1,6 +1,16 @@
 #!flask/bin/python
 
 #
+#	CJMX Client information
+#
+# Get all messagesinpersec in brokertopic
+#	<< mbeans 'kafka.server:type=BrokerTopicMetrics,name=MessagesInPerSec,*' select * >>
+#
+#
+
+#
+#
+#
 #	IMPORTS
 #
 #
@@ -42,7 +52,7 @@ kafka_manager = "/kafka-manager"
 admin = "/admin"
 
 #	Consumers
-consumer_groups = "/consumers"
+consumers = "/consumers"
 
 #	Config
 config = "/config"
@@ -64,15 +74,23 @@ class extended_client:
 	#	FUNCTIONS
 	#
 	#
-	def __init__(self, url_port):
+	def __init__(self, host, port):
 		#self.name = in_name
 		#Start zookeeper client
-		self.url_port = url_port
-		self.zk = KazooClient(hosts=url_port)
+		self.port = port
+		self.host=host
+		self.url_port=host + ":" +str(port)
+		self.zk = KazooClient(hosts=self.url_port)
 		#self.zk.start();
 
 	#	Listen for when the connection is:
 	#	dropped, restored, or when the Zookeeper session has expired
+
+	def get_port(self, new_zk):
+		return new_zk.port
+
+	def get_host(self, new_zk):
+		return new_zk.host
 
 	def my_listener(state):
 		if state == KazooState.LOST:
@@ -98,14 +116,16 @@ class extended_client:
 			return new_zk.get_children(ids)
 
 	#		Get a given broker given id
-	def get_broker(new_zk, new_id):
+	def get_broker(self, new_zk, new_id):
 		if new_zk.exists(ids):
 			#Brokers exist, find how many
 			return new_zk.get(ids + "/" + str(new_id))
 
 	#		Get the info of a given topic
-	def get_topic(new_zk, topic):
-		return new_zk.get(topics + "/" + str(topic))
+	def get_topic(self, new_zk, topic):
+		t = topics + "/" + str(topic)
+		if new_zk.exists(t):
+			return new_zk.get(t)
 
 	#	2. 	Get the number of partitions of a given topic
 	def get_num_partitions(new_zk, topic):
@@ -114,25 +134,56 @@ class extended_client:
 			#Topic exists, get number of partitions
 			return len(new_zk.get_children(partitions))
 
+	#		Get consumers given a producer
+	def show_consumers_given_producer(self, new_zk, new_producer):
+		topics = self.show_topics_produced(new_zk, new_producer)
+		ret = []
+		for t in topics:
+			con = self.show_topic_consumers(new_zk, t)
+			for c in con:
+				ret.append(c)
+		return ret
+
+	#		Get producers given a consumer
+	def show_producers_given_consumer(self, new_zk, new_consumer):
+		topics = self.show_topics_consumed(new_zk, new_consumer)
+		ret = []
+		for t in topics:
+			prod = self.show_topic_producers(new_zk, t)
+			for p in prod:
+				ret.append(p)
+		return ret
+
+	#		Show topics produced
+	def show_topics_produced(self, new_zk, new_producer):
+		path = producers + "/" + new_producer + "/topics"
+		if new_zk.exists(path):
+			return new_zk.get_children(path)
+
+	#		Show topics consumed
+	def show_topics_consumed(self, new_zk, new_consumer):
+		path = consumers + "/" + new_consumer + "/owners"
+		if new_zk.exists(path):
+			return new_zk.get_children(path)
 	# 		Get the total number of messages being sent through the cluster
 
 	#	3. 	Get number of messages per partition
 
 	#	4. 	Get the number of consumer groups
-	def get_num_consumers(self, new_zk):
-		if new_zk.exists(consumer_groups):
+	def get_num_all_consumers(self, new_zk):
+		if new_zk.exists(consumers):
 			#If directory exists
-			return len(new_zk.get_children(consumer_groups))
+			return len(new_zk.get_children(consumers))
 
 	#	 	Get all the consumer groups
 	def show_all_consumers(self, new_zk):
-		if new_zk.exists(consumer_groups):
+		if new_zk.exists(consumers):
 			#If directory exists
-			return new_zk.get_children(consumer_groups)
+			return new_zk.get_children(consumers)
 
 	#		Get a particular consumer
 	def get_consumer(self, new_zk, new_consumer):
-		path = consumer_groups + "/" + new_consumer
+		path = consumers + "/" + new_consumer
 		if new_zk.exists(path):
 			return new_zk.get(path)
 		return None
@@ -159,7 +210,7 @@ class extended_client:
 
 	# 	7. 	Get the topic listened to by a given consumer group
 	def show_consumer_topics(self, new_zk, new_group):
-		path = consumer_groups + "/" + new_group + "/owners"
+		path = consumers + "/" + new_group + "/owners"
 		if new_zk.exists(path):
 			return new_zk.get_children(path)
 
@@ -171,7 +222,7 @@ class extended_client:
 
 	# 		Get number of topics in a given group
 	def get_num_topics(new_zk, new_group):
-		this_group_topics = consumer_groups + "/" + new_group + "/owners"
+		this_group_topics = consumers + "/" + new_group + "/owners"
 		if new_zk.exists(this_group_topics):
 			return len(new_zk.get_children(this_group_topics))
 
@@ -183,18 +234,20 @@ class extended_client:
 	#		Get all the available topics
 	def show_all_topics(self, new_zk):
 		if new_zk.exists(topics):
+			#for t in new_zk.get_children(topics):
+				#print "In show_all_topics: " + t
 			return new_zk.get_children(topics)
 
 	#		Show topic consumer
-	def show_topic_consumers(new_zk, new_topic):
+	def show_topic_consumers(self, new_zk, new_topic):
 		to_return = []
-		if get_topic(new_zk, new_topic) is not None:
+		if self.get_topic(new_zk, new_topic) is not None:
 			#Topic exists
 			#Get all the consumers 
-			cons = show_all_consumers(new_zk)
+			cons = self.show_all_consumers(new_zk)
 			for con in cons:
 				#For each consumer, get all its topics
-				topics = show_consumer_topics(new_zk, con)
+				topics = self.show_consumer_topics(new_zk, con)
 				for topic in topics:
 					#For all the topics in this consumer
 					#Check if the given topic is in there
@@ -204,15 +257,15 @@ class extended_client:
 		return to_return
 
 	#		Show topic producer
-	def show_topic_producers(new_zk, new_topic):
+	def show_topic_producers(self, new_zk, new_topic):
 		to_return = []
-		if get_topic(new_zk, new_topic) is not None:
+		if self.get_topic(new_zk, new_topic) is not None:
 			#Topic exists
 			#Get all the producers
-			prods = show_all_producers(new_zk)
+			prods = self.show_all_producers(new_zk)
 			for prod in prods:
 				#For each producer, get all its topics
-				topics = show_producer_topics(new_zk, prod)
+				topics = self.show_producer_topics(new_zk, prod)
 				for topic in topics:
 					#For all the topics in this producer
 					#Check if the given topic is in there
@@ -253,9 +306,9 @@ class extended_client:
 		return producers
 
 	#		Show unique consumers. Consumers who are only consuemrs
-	def show_unique_consumers(new_zk):
-		consumers = show_all_consumers(new_zk)
-		con_prods = show_consumer_producers(new_zk)
+	def show_unique_consumers(self, new_zk):
+		consumers = self.show_all_consumers(new_zk)
+		con_prods = self.show_consumer_producers(new_zk)
 
 		for con_prod in con_prods:
 			consumers.remove(con_prod)
@@ -361,7 +414,7 @@ class extended_client:
 				data = {}
 				data['source'] = p
 				data['target'] = t
-				data['type'] = 'suit'
+				#data['type'] = 'producer'
 				mega_data.append(data)
 
 		for c in consumers:
@@ -370,15 +423,183 @@ class extended_client:
 				data = {}
 				data['source'] = t
 				data['target'] = c
-				data['type'] = 'suit'
+				#data['type'] = 'topic'
 				mega_data.append(data)
 
 		#Connect all to a source root node
 		for p0 in self.show_unique_producers(new_zk):
 			data = {}
-			data['source'] = '/'
+			data['source'] = 'root'
 			data['target'] = p0
-			data['type'] = 'suit'
+			data['type'] = 'root'
+			mega_data.append(data)
+		return json.dumps(mega_data)
+
+
+	# #Get the graph data in form of json
+	# def get_json(self, new_zk):
+	# 	mega_data = []
+	# 	#data['key'] = 'value'
+
+	# 	up = self.show_unique_producers(new_zk)
+	# 	uc = self.show_unique_consumers(new_zk)
+	# 	cp = self.show_consumer_producers(new_zk)
+	# 	#Generate the data to pass to the sketching graph
+	# 	for p in up:
+	# 		topics = self.show_producer_topics(new_zk,p)
+	# 		#print "Producers: " + p
+	# 		for t in topics:
+	# 			data = {}
+	# 			data['source'] = p
+	# 			data['target'] = t
+	# 			data['type'] = 'producer'
+	# 			mega_data.append(data)
+
+	# 	for c in uc:
+	# 		#print "Consuemrs: " + c
+	# 		topics = self.show_consumer_topics(new_zk,c)
+	# 		for t in topics:
+	# 			data = {}
+	# 			data['source'] = t
+	# 			data['target'] = c
+	# 			data['type'] = 'topic'
+	# 			mega_data.append(data)
+
+		
+	# 	for i in cp:
+	# 		#CP as a consumer
+	# 		#print "Consuemr producers: " + i
+	# 		topics = self.show_consumer_topics(new_zk,i)
+	# 		for t in topics:
+	# 			data = {}
+	# 			data['source'] = t
+	# 			data['target'] = i
+	# 			data['type'] = 'topic'
+	# 			mega_data.append(data)
+
+	# 		#CP as a producer
+	# 		topics = self.show_producer_topics(new_zk,i)
+	# 		for t in topics:
+	# 			data = {}
+	# 			data['source'] = i
+	# 			data['target'] = t
+	# 			data['type'] = 'consumer-producer'
+	# 			mega_data.append(data)
+
+
+	# 	#Connect all to a source root node
+	# 	for p0 in up:
+	# 		data = {}
+	# 		data['source'] = 'root'
+	# 		data['target'] = p0
+	# 		data['type'] = 'root'
+	# 		mega_data.append(data)
+
+	# 	return json.dumps(mega_data)
+
+	#Get the graph nodes in form of json
+	def get_nodes_json(self, new_zk):
+		mega_data = []
+		#data['key'] = 'value'
+
+		con_prod = self.show_consumer_producers(new_zk)
+		uni_cons = self.show_unique_consumers(new_zk)
+		uni_prod = self.show_unique_producers(new_zk)
+
+		#	Consumer producers
+		for cp in con_prod:	
+			data = {}
+			data['name'] = cp
+			data['type'] = 'consumer_producer'
+			
+			#Get the nodes where cp produces to and consumers from
+			prods = self.show_producers_given_consumer(new_zk, cp)
+			cons = self.show_consumers_given_producer(new_zk, cp)
+			w = len(cons) + len(prods)
+			data['weight'] = w
+			data['poststo'] = cons
+			data['getsfrom'] = prods
+			mega_data.append(data)
+
+		#	Unique consumers
+		for uc in uni_cons:
+			data = {}
+			data['name'] = uc
+			data['type'] = 'consumer'
+			
+			#Show the producers to this consumer
+			prods = self.show_producers_given_consumer(new_zk, uc)
+			w = len(prods)
+			data['weight'] = w
+			data['getsfrom'] = prods
+			mega_data.append(data)
+
+		# 	Unique producers
+		for up in self.show_unique_producers(new_zk):
+			data = {}
+			data['name'] = up
+			data['type'] = 'producer'
+			
+			#Get the consumers this producer produces to
+			cons = self.show_consumers_given_producer(new_zk, up)
+			w = len(cons)
+			data['weight'] = w
+			data['poststo'] = cons
+			mega_data.append(data)
+
+		# 	Topics
+		for t in self.show_all_topics(new_zk):
+			data = {}
+			data['name'] = t
+			data['type'] = 'topic'
+			w = len(self.show_topic_consumers(new_zk, t)) + len(self.show_topic_producers(new_zk, t))
+			data['weight'] = w
+			mega_data.append(data)
+
+		#	Root node
+		data = {}
+		data['name'] = 'root'
+		data['type'] = 'root'
+		w = len(self.show_unique_producers(new_zk))
+		data['weight'] = w
+		data['zkhost'] = self.host
+		data['zkport'] = self.port
+		mega_data.append(data)
+
+		return json.dumps(mega_data)
+
+	#Get the graph nodes in form of json
+	def get_edges_json(self, new_zk):
+		mega_data = []
+		#data['key'] = 'value'
+
+		producers = self.show_all_producers(new_zk)
+		consumers = self.show_all_consumers(new_zk)
+		#Generate the data to pass to the sketching graph
+		for p in producers:
+			topics = self.show_producer_topics(new_zk,p)
+			for t in topics:
+				data = {}
+				data['source'] = p
+				data['target'] = t
+				data['weight'] = 1;
+				mega_data.append(data)
+
+		for c in consumers:
+			topics = self.show_consumer_topics(new_zk,c)
+			for t in topics:
+				data = {}
+				data['source'] = t
+				data['target'] = c
+				data['weight'] = 1;
+				mega_data.append(data)
+
+		#Connect all to a source root node
+		for p0 in self.show_unique_producers(new_zk):
+			data = {}
+			data['source'] = 'root'
+			data['target'] = p0
+			data['weight'] = 1;
 			mega_data.append(data)
 		return json.dumps(mega_data)
 
@@ -393,21 +614,27 @@ class extended_client:
 # #
 # #
 # #Start the logging
-# logging.basicConfig()
+logging.basicConfig()
 
 #print "instantiating the class"
 #eC = extended_client('localhost:2181')
 
-# #Start zookeeper client
-# zk = KazooClient(hosts='127.0.0.1:2181')
-# zk.start();
+#Start an instance of the extended_client
+ext_client = extended_client('localhost',2181)
 
+#Start zookeeper client
+zk = ext_client.zk
+zk.start()
+
+#Get broker information
+broker_ids = ext_client.show_brokers_ids(zk)
+
+#for bi in broker_ids:
+	#print ext_client.get_broker(zk, bi)
+#print show
 # #Register zookeeper listener
 # zk.add_listener(my_listener)
 # prods = show_all_producers(zk)
-
-# realgraph = get_digraph(zk)
-# v_p = realgraph.vp.string
 
 # graph_draw(
 # 	realgraph, 

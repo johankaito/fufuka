@@ -1,17 +1,19 @@
 {% extends "layout.html" %}
 {% block head %}
-<link rel="stylesheet" type="text/css" href="{{ style_url }}"/>    
+{{ super() }}
+<!-- <meta http-equiv="refresh" content="1" > -->
 {% endblock %}
 {% block content %}
 <div class="wrapper">
-    <div id="list-items">
-<!--         <div class="test">
-            {% block test%}
-            <p>
-                <a href="/graph">Test</a>
-            </p>
+    <!--<div id="list-items">
+        <div class="topics">
+            {% block topics%}
+            <p>Topics</p>
+            {% for item in topics %}
+            <li>{{ item }}</li>
+            {% endfor %}
             {% endblock %}
-        </div> -->
+        </div>
         <div class="producers">
             {% block producers%}
             <p>Producers</p>
@@ -36,10 +38,35 @@
             {% endfor %}
             {% endblock %}
         </div>
+    </div> -->
+    <div id="digraph-frame">
+        <iframe src="/test" scrolling="no"></iframe>
     </div>
-    <div id="d3-frame">
-        <iframe src="/graph" marginwidth="0" marginheight="0" scrolling="no"></iframe>
+<!--     <div id="current-frame">
+        <iframe src="/current_node" marginwidth="0" marginheight="0" scrolling="no"></iframe>
+    </div> -->
+    <div class="text-area">
+        <textarea id="topic-text-area"></textarea>
     </div>
+    <script type="text/javascript">
+//Get the latest JMX data
+//     setInterval(function(){
+//    function obtainedResult(data) {
+//         $("#topic-text-area").val(data);
+//     }
+//     $.ajax({
+        
+//         url: "http://" + {{ host }} + ":8778/jolokia/read/kafka.server:type=BrokerTopicMetrics,name=MessagesInPerSec,topic=*",
+//         type: "get",
+//         datatype:"json",        
+//         success: function(response){
+//         // Execute our callback function
+//         obtainedResult(response);
+// }
+// });
+
+    // }, 1000);
+    </script>
     {% block footer %}
     {% endblock %}
 </div>
