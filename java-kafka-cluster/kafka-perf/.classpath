@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src/java"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="lib/jopt-simple-3.1.jar"/>
+	<classpathentry kind="lib" path="/Users/JKeto/.m2/repository/log4j/log4j/1.2.15/log4j-1.2.15.jar"/>
+	<classpathentry kind="lib" path="/Users/JKeto/.m2/repository/org/scala-lang/scala-library/2.9.2/scala-library-2.9.2.jar"/>
+	<classpathentry kind="lib" path="/Users/JKeto/.m2/repository/org/apache/kafka/kafka_2.9.2/0.8.1.1/kafka_2.9.2-0.8.1.1.jar"/>
+	<classpathentry kind="lib" path="/Users/JKeto/.m2/repository/org/apache/zookeeper/zookeeper/3.3.4/zookeeper-3.3.4.jar"/>
+	<classpathentry kind="lib" path="/Users/JKeto/.m2/repository/com/101tec/zkclient/0.3/zkclient-0.3.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

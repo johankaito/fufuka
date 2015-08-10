@@ -1,0 +1,7 @@
+[2015-08-04 12:15:06,819] INFO 2 successfully elected as leader (kafka.server.ZookeeperLeaderElector)
+[2015-08-04 12:15:06,930] INFO re-registering broker info in ZK for broker 2 (kafka.server.KafkaHealthcheck)
+[2015-08-04 12:15:07,279] INFO Registered broker 2 at path /brokers/ids/2 with address jketos-macbook-pro.local:9093. (kafka.utils.ZkUtils$)
+[2015-08-04 12:15:07,279] INFO done re-registering broker (kafka.server.KafkaHealthcheck)
+[2015-08-04 12:15:07,279] INFO Subscribing to /brokers/topics path to watch for new topics (kafka.server.KafkaHealthcheck)
+[2015-08-04 12:15:07,356] INFO [ReplicaFetcherManager on broker 2] Removed fetcher for partitions [t2,1],[t3,1],[t1,0],[t4,0],[t1,2] (kafka.server.ReplicaFetcherManager)
+[2015-08-04 12:15:07,365] INFO New leader is 2 (kafka.server.ZookeeperLeaderElector$LeaderChangeListener)

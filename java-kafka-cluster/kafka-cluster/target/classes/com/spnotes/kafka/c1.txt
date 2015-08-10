@@ -1,0 +1,15 @@
+Prod: null MSG: 1	BERNARDO	Who's there?
+Prod: null MSG: 2	FRANCISCO	Nay, answer me: stand, and unfold yourself.
+Prod: null MSG: 3	BERNARDO	Long live the king!
+Prod: null MSG: 4	FRANCISCO	Bernardo?
+Prod: null MSG: 5	BERNARDO	He.
+Prod: null MSG: 6	FRANCISCO	You come most carefully upon your hour.
+Prod: null MSG: 7	BERNARDO	'Tis now struck twelve; get thee to bed, Francisco.
+Prod: null MSG: 8	FRANCISCO	For this relief much thanks: 'tis bitter cold,And I am sick at heart.
+Prod: null MSG: 9	BERNARDO	Have you had quiet guard?
+Prod: null MSG: 10	FRANCISCO	Not a mouse stirring.
+Prod: null MSG: 11	BERNARDO	Well, good night.If you do meet Horatio and Marcellus,The rivals of my watch, bid them make haste.
+Prod: null MSG: 12	FRANCISCO	I think I hear them. Stand, ho! Who's there?
+Prod: null MSG: 13	HORATIO	Friends to this ground.
+Prod: null MSG: 14	MARCELLUS	And liegemen to the Dane.
+Prod: null MSG: 15	FRANCISCO	Give you good night.

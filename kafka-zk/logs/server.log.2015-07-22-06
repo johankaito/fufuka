@@ -1,0 +1,8 @@
+[2015-07-22 06:07:59,664] INFO Closing socket connection to /127.0.0.1. (kafka.network.Processor)
+[2015-07-22 06:07:59,949] INFO 0 successfully elected as leader (kafka.server.ZookeeperLeaderElector)
+[2015-07-22 06:08:00,041] INFO re-registering broker info in ZK for broker 0 (kafka.server.KafkaHealthcheck)
+[2015-07-22 06:08:00,044] INFO Registered broker 0 at path /brokers/ids/0 with address 10.15.104.47:9092. (kafka.utils.ZkUtils$)
+[2015-07-22 06:08:00,044] INFO done re-registering broker (kafka.server.KafkaHealthcheck)
+[2015-07-22 06:08:00,044] INFO Subscribing to /brokers/topics path to watch for new topics (kafka.server.KafkaHealthcheck)
+[2015-07-22 06:08:00,066] INFO [ReplicaFetcherManager on broker 0] Removed fetcher for partitions [t1,1],[group-test-topic,1],[group-test-topic,0],[t1,0],[group-test-topic,2],[t1,2] (kafka.server.ReplicaFetcherManager)
+[2015-07-22 06:08:00,069] INFO New leader is 0 (kafka.server.ZookeeperLeaderElector$LeaderChangeListener)

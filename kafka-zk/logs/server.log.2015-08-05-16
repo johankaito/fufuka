@@ -1,0 +1,2 @@
+[2015-08-05 19:48:48,604] INFO Partition [_schemas,0] on broker 2: Shrinking ISR for partition [_schemas,0] from 0,2 to 2 (kafka.cluster.Partition)
+[2015-08-05 19:48:48,623] INFO Closing socket connection to /10.15.100.202. (kafka.network.Processor)

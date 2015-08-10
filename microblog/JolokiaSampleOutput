@@ -1,0 +1,43 @@
+{
+	"request":
+	{
+		"mbean":"kafka.server:name=MessagesInPerSec,topic=*,type=BrokerTopicMetrics","type":"read"
+	},
+
+	"value":
+	{
+		"kafka.server:name=MessagesInPerSec,topic=t6,type=BrokerTopicMetrics":
+		{
+			"RateUnit":"SECONDS","OneMinuteRate":2.312913912414344E-16,"EventType":"messages","FifteenMinuteRate":0.09028527622349727,"Count":3300,"FiveMinuteRate":0.001507082093556208,"MeanRate":0.042662672144431146
+		},
+
+		"kafka.server:name=MessagesInPerSec,topic=t7,type=BrokerTopicMetrics":
+		{
+			"RateUnit":"SECONDS","OneMinuteRate":2.3081502978420382E-16,"EventType":"messages","FifteenMinuteRate":0.09027282049366556,"Count":3290,"FiveMinuteRate":0.001506455935396286,"MeanRate":0.04253355040144039
+		},
+
+		"kafka.server:name=MessagesInPerSec,topic=_schemas,type=BrokerTopicMetrics":
+		{
+			"RateUnit":"SECONDS","OneMinuteRate":0.0,"EventType":"messages","FifteenMinuteRate":0.0,"Count":0,"FiveMinuteRate":0.0,"MeanRate":0.0
+		},
+
+		"kafka.server:name=MessagesInPerSec,topic=t1,type=BrokerTopicMetrics":
+		{
+			"RateUnit":"SECONDS","OneMinuteRate":8.610300095974303E-17,"EventType":"messages","FifteenMinuteRate":0.034713705280729014,"Count":1130,"FiveMinuteRate":5.769273144386149E-4,"MeanRate":0.014608668345182232
+		},
+
+		"kafka.server:name=MessagesInPerSec,topic=t3,type=BrokerTopicMetrics":
+		{
+			"RateUnit":"SECONDS","OneMinuteRate":1.3432432513597839E-16,"EventType":"messages","FifteenMinuteRate":0.052210475556300893,"Count":2040,"FiveMinuteRate":8.723550420161737E-4,"MeanRate":0.0263732537722606
+		},
+
+		"kafka.server:name=MessagesInPerSec,topic=t2,type=BrokerTopicMetrics":
+		{
+			"RateUnit":"SECONDS","OneMinuteRate":1.6893345664945257E-16,"EventType":"messages","FifteenMinuteRate":0.06547990372806996,"Count":2170,"FiveMinuteRate":0.0010944098136823506,"MeanRate":0.028053633545000168
+		}
+	},
+
+	"timestamp":1438878001,
+
+	"status":200
+}
