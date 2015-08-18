@@ -43,7 +43,7 @@ case $COMMAND in
     ;;
 esac
 
-exec $base_dir/kafka-run-class.sh $EXTRA_ARGS kafka.Kafka $@
+exec $base_dir/kafka-run2-class.sh $EXTRA_ARGS kafka.Kafka $@
 
 #Set the JMX port
 export JMX_PORT=${JMX_PORT:-9999} 

@@ -1,0 +1,32 @@
+Aug 13, 2015 12:23:58 PM org.apache.catalina.core.ApplicationContext log
+INFO: jolokia-agent: No access restrictor found at classpath:/jolokia-access.xml, access to all MBeans is allowed
+Aug 13, 2015 12:23:59 PM org.apache.catalina.core.ApplicationContext log
+INFO: ContextListener: contextInitialized()
+Aug 13, 2015 12:23:59 PM org.apache.catalina.core.ApplicationContext log
+INFO: SessionListener: contextInitialized()
+Aug 13, 2015 12:23:59 PM org.apache.catalina.core.ApplicationContext log
+INFO: ContextListener: attributeAdded('org.apache.jasper.compiler.TldLocationsCache', 'org.apache.jasper.compiler.TldLocationsCache@692bdc9e')
+Aug 13, 2015 12:27:35 PM org.apache.catalina.core.ApplicationContext log
+INFO: jolokia-agent: No access restrictor found at classpath:/jolokia-access.xml, access to all MBeans is allowed
+Aug 13, 2015 12:27:36 PM org.apache.catalina.core.ApplicationContext log
+INFO: ContextListener: contextInitialized()
+Aug 13, 2015 12:27:36 PM org.apache.catalina.core.ApplicationContext log
+INFO: SessionListener: contextInitialized()
+Aug 13, 2015 12:27:36 PM org.apache.catalina.core.ApplicationContext log
+INFO: ContextListener: attributeAdded('org.apache.jasper.compiler.TldLocationsCache', 'org.apache.jasper.compiler.TldLocationsCache@54156670')
+Aug 13, 2015 12:27:36 PM org.apache.catalina.core.ApplicationContext log
+INFO: SessionListener: contextDestroyed()
+Aug 13, 2015 12:27:36 PM org.apache.catalina.core.ApplicationContext log
+INFO: ContextListener: contextDestroyed()
+Aug 13, 2015 12:29:21 PM org.apache.catalina.core.ApplicationContext log
+INFO: SessionListener: contextDestroyed()
+Aug 13, 2015 12:29:21 PM org.apache.catalina.core.ApplicationContext log
+INFO: ContextListener: contextDestroyed()
+Aug 13, 2015 12:29:27 PM org.apache.catalina.core.ApplicationContext log
+INFO: jolokia-agent: No access restrictor found at classpath:/jolokia-access.xml, access to all MBeans is allowed
+Aug 13, 2015 12:29:27 PM org.apache.catalina.core.ApplicationContext log
+INFO: ContextListener: contextInitialized()
+Aug 13, 2015 12:29:27 PM org.apache.catalina.core.ApplicationContext log
+INFO: SessionListener: contextInitialized()
+Aug 13, 2015 12:29:27 PM org.apache.catalina.core.ApplicationContext log
+INFO: ContextListener: attributeAdded('org.apache.jasper.compiler.TldLocationsCache', 'org.apache.jasper.compiler.TldLocationsCache@6767834')

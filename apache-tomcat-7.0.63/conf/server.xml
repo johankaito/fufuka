@@ -99,6 +99,12 @@
          on to the appropriate Host (virtual host).
          Documentation at /docs/config/engine.html -->
 
+    <!-- For tomcat proxy -->
+    <Connector port="8080" 
+	maxThreads="150" minSpareThreads="25" maxSpareThreads="75"
+	enableLookups="false" acceptCount="100" connectionTimeout="20000"
+	proxyPort="80" disableUploadTimeout="true"/>
+    
     <!-- You should set jvmRoute to support load-balancing via AJP ie :
     <Engine name="Catalina" defaultHost="localhost" jvmRoute="jvm1">
     -->

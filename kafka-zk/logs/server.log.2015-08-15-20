@@ -1,0 +1,6 @@
+[2015-08-15 23:32:13,811] INFO re-registering broker info in ZK for broker 2 (kafka.server.KafkaHealthcheck)
+[2015-08-15 23:32:14,506] INFO Registered broker 2 at path /brokers/ids/2 with address jketos-mbp.cable.rcn.com:9093. (kafka.utils.ZkUtils$)
+[2015-08-15 23:32:14,507] INFO done re-registering broker (kafka.server.KafkaHealthcheck)
+[2015-08-15 23:32:14,508] INFO Subscribing to /brokers/topics path to watch for new topics (kafka.server.KafkaHealthcheck)
+[2015-08-15 23:32:14,515] INFO New leader is 1 (kafka.server.ZookeeperLeaderElector$LeaderChangeListener)
+[2015-08-15 23:32:14,555] INFO [ReplicaFetcherManager on broker 2] Removed fetcher for partitions [t1,0],[t3,0] (kafka.server.ReplicaFetcherManager)

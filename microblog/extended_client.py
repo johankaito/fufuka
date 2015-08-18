@@ -66,7 +66,7 @@ producers = "/producers"
 #
 #
 
-
+zk = None
 #The class
 class extended_client:
 	"""Python class to extend client functionality when interacting with zk"""
@@ -81,7 +81,12 @@ class extended_client:
 		self.host=host
 		self.url_port=host + ":" +str(port)
 		self.zk = KazooClient(hosts=self.url_port)
-		#self.zk.start();
+
+		#Check if "/producers" is in zk.
+		# if self.show_all_producers(zk) is None:
+		# 	self.has_producers_in_zk = False
+		# else:
+		# 	self.has_producers_in_zk = True
 
 	#	Listen for when the connection is:
 	#	dropped, restored, or when the Zookeeper session has expired
@@ -195,9 +200,12 @@ class extended_client:
 
 	#	 	Get all the producers
 	def show_all_producers(self, new_zk):
+		#print "In show all producers"
 		if new_zk.exists(producers):
+			#print "Inside the if statement"
 			#If directory exists
 			return new_zk.get_children(producers)
+		return None
 
 	#		Get a particular producer
 	def get_producer(new_zk, new_producer):
@@ -288,32 +296,41 @@ class extended_client:
 
 	#		Show consumer-producers. Producers which are also consumers
 	def show_consumer_producers(self, new_zk):
-		producers = self.show_all_producers(new_zk)
+		prods = self.show_all_producers(new_zk)
+
+		#	Check if producers actually exist in zk 
+		if prods is None:
+			return None
+
 		con_prod = []
-		for producer in producers:
+		for producer in prods:
 			if self.get_consumer(new_zk, producer) is not None:
 				con_prod.append(producer)
 		return con_prod
 
 	#		Show unique producers. Producers who are only producers
 	def show_unique_producers(self, new_zk):
-		producers = self.show_all_producers(new_zk)
+		prods = self.show_all_producers(new_zk)
 		con_prods = self.show_consumer_producers(new_zk)
 
-		for con_prod in con_prods:
-			producers.remove(con_prod)
+		#	Check if producers actually exist in zk 
+		if prods is None:
+			return None
 
-		return producers
+		for con_prod in con_prods:
+			prods.remove(con_prod)
+
+		return prods
 
 	#		Show unique consumers. Consumers who are only consuemrs
 	def show_unique_consumers(self, new_zk):
-		consumers = self.show_all_consumers(new_zk)
+		cons = self.show_all_consumers(new_zk)
 		con_prods = self.show_consumer_producers(new_zk)
 
 		for con_prod in con_prods:
-			consumers.remove(con_prod)
+			cons.remove(con_prod)
 
-		return consumers
+		return cons
 	#		Create a graph 
 	def get_digraph(new_zk):
 		#	Graph
@@ -336,14 +353,14 @@ class extended_client:
 			# Add topic name to be part of properties of graph
 			v_p[t] = topic
 			#Get all consumers and producers
-			producers = show_topic_producers(new_zk, topic)
+			prods = show_topic_producers(new_zk, topic)
 			#print topic + "producers are : " + str(len(producers))
-			consumers = show_topic_consumers(new_zk, topic)
+			cons = show_topic_consumers(new_zk, topic)
 			#print topic + "consumers are: " + str(len(consumers))
 
 			# Deal with sole producers and sole consumers
 			# Create a node for each producer and connect them to the topic
-			for producer in producers:
+			for producer in prods:
 				# If producer is ONLY producer, create the node
 				if get_consumer(new_zk, producer) is None:
 					p = di_graph.add_vertex()
@@ -351,7 +368,7 @@ class extended_client:
 					di_graph.add_edge(p, t)
 
 			#Create a node for each consumer and connect them to the topic
-			for consumer in consumers:
+			for consumer in cons:
 				# If ONLY consumer, continue, otherwise, don't create node
 				if get_producer(new_zk, consumer) is None:
 					c = di_graph.add_vertex()
@@ -405,21 +422,35 @@ class extended_client:
 		mega_data = []
 		#data['key'] = 'value'
 
-		producers = self.show_all_producers(new_zk)
-		consumers = self.show_all_consumers(new_zk)
+		prods = self.show_all_producers(new_zk)
+		cons = self.show_all_consumers(new_zk)
 		#Generate the data to pass to the sketching graph
-		for p in producers:
-			topics = self.show_producer_topics(new_zk,p)
-			for t in topics:
+
+		#Check For cases where the producers aren't available
+		if prods is not None:
+			#	Producers are in zk, go ahead
+			for p in prods:
+				topics = self.show_producer_topics(new_zk,p)
+				for t in topics:
+					data = {}
+					data['source'] = p
+					data['target'] = t
+					#data['type'] = 'producer'
+					mega_data.append(data)
+
+			#Connect all to a source root node
+			for p0 in self.show_unique_producers(new_zk):
 				data = {}
-				data['source'] = p
-				data['target'] = t
-				#data['type'] = 'producer'
+				data['source'] = 'root'
+				data['target'] = p0
+				data['type'] = 'root'
 				mega_data.append(data)
 
-		for c in consumers:
+		for c in cons:
 			topics = self.show_consumer_topics(new_zk,c)
+			#print "COnsumer: " + c
 			for t in topics:
+				#print "Topic: " + t
 				data = {}
 				data['source'] = t
 				data['target'] = c
@@ -427,13 +458,14 @@ class extended_client:
 				mega_data.append(data)
 
 		#Connect all to a source root node
-		for p0 in self.show_unique_producers(new_zk):
+		for t in self.show_all_topics(new_zk):
 			data = {}
 			data['source'] = 'root'
-			data['target'] = p0
+			data['target'] = t
 			data['type'] = 'root'
 			mega_data.append(data)
-		return json.dumps(mega_data)
+
+		return mega_data
 
 
 	# #Get the graph data in form of json
@@ -502,107 +534,200 @@ class extended_client:
 		mega_data = []
 		#data['key'] = 'value'
 
-		con_prod = self.show_consumer_producers(new_zk)
-		uni_cons = self.show_unique_consumers(new_zk)
 		uni_prod = self.show_unique_producers(new_zk)
 
-		#	Consumer producers
-		for cp in con_prod:	
+		if uni_prod is not None:
+			#	Producers are in zk, go ahead
+			con_prod = self.show_consumer_producers(new_zk)
+			uni_cons = self.show_unique_consumers(new_zk)
+
+			#	Consumer producers
+			for cp in con_prod:	
+				data = {}
+				data['name'] = cp
+				data['type'] = 'consumer_producer'
+				
+				#Get the nodes where cp produces to and consumers from
+				prods = self.show_producers_given_consumer(new_zk, cp)
+				cons = self.show_consumers_given_producer(new_zk, cp)
+				w = len(cons) + len(prods)
+				data['weight'] = w
+				data['poststo'] = cons
+				data['getsfrom'] = prods
+				mega_data.append(data)
+
+			#	Unique consumers
+			for uc in uni_cons:
+				data = {}
+				data['name'] = uc
+				data['type'] = 'consumer'
+				
+				#Show the producers to this consumer
+				prods = self.show_producers_given_consumer(new_zk, uc)
+				w = len(prods)
+				data['weight'] = w
+				data['getsfrom'] = prods
+				mega_data.append(data)
+
+			# 	Unique producers
+			for up in self.show_unique_producers(new_zk):
+				data = {}
+				data['name'] = up
+				data['type'] = 'producer'
+				
+				#Get the consumers this producer produces to
+				cons = self.show_consumers_given_producer(new_zk, up)
+				w = len(cons)
+				data['weight'] = w
+				data['poststo'] = cons
+				mega_data.append(data)
+
+			# 	Topics
+			for t in self.show_all_topics(new_zk):
+				data = {}
+				data['name'] = t
+				data['type'] = 'topic'
+				w = len(self.show_topic_consumers(new_zk, t)) + len(self.show_topic_producers(new_zk, t))
+				data['weight'] = w
+				mega_data.append(data)
+
+			#	Root node
 			data = {}
-			data['name'] = cp
-			data['type'] = 'consumer_producer'
-			
-			#Get the nodes where cp produces to and consumers from
-			prods = self.show_producers_given_consumer(new_zk, cp)
-			cons = self.show_consumers_given_producer(new_zk, cp)
-			w = len(cons) + len(prods)
+			data['name'] = 'root'
+			data['type'] = 'root'
+			w = len(self.show_unique_producers(new_zk))
 			data['weight'] = w
-			data['poststo'] = cons
-			data['getsfrom'] = prods
+			data['zkhost'] = self.host
+			data['zkport'] = self.port
 			mega_data.append(data)
 
-		#	Unique consumers
-		for uc in uni_cons:
+		else:
+			#	No producers in zk
+			cons = self.show_all_consumers(new_zk)
+
+			#	Create all consumer nodes
+			for c in cons:
+				data = {}
+				data['name'] = c
+				data['type'] = 'consumer'
+				
+				#Show topics consumed
+				tops = self.show_topics_consumed(new_zk, c)
+				w = len(tops)
+				data['weight'] = w
+				data['getsfrom'] = tops
+				mega_data.append(data)
+
+			# 	Create all Topic nodes
+			for t in self.show_all_topics(new_zk):
+				data = {}
+				data['name'] = t
+				data['type'] = 'topic'
+				w = len(self.show_topic_consumers(new_zk, t))
+				data['weight'] = w
+				mega_data.append(data)
+
+			#	Root node
 			data = {}
-			data['name'] = uc
-			data['type'] = 'consumer'
-			
-			#Show the producers to this consumer
-			prods = self.show_producers_given_consumer(new_zk, uc)
-			w = len(prods)
+			data['name'] = 'root'
+			data['type'] = 'root'
+			w = len(self.show_all_topics(new_zk))
 			data['weight'] = w
-			data['getsfrom'] = prods
+			data['zkhost'] = self.host
+			data['zkport'] = self.port
 			mega_data.append(data)
 
-		# 	Unique producers
-		for up in self.show_unique_producers(new_zk):
-			data = {}
-			data['name'] = up
-			data['type'] = 'producer'
-			
-			#Get the consumers this producer produces to
-			cons = self.show_consumers_given_producer(new_zk, up)
-			w = len(cons)
-			data['weight'] = w
-			data['poststo'] = cons
-			mega_data.append(data)
 
-		# 	Topics
-		for t in self.show_all_topics(new_zk):
-			data = {}
-			data['name'] = t
-			data['type'] = 'topic'
-			w = len(self.show_topic_consumers(new_zk, t)) + len(self.show_topic_producers(new_zk, t))
-			data['weight'] = w
-			mega_data.append(data)
-
-		#	Root node
-		data = {}
-		data['name'] = 'root'
-		data['type'] = 'root'
-		w = len(self.show_unique_producers(new_zk))
-		data['weight'] = w
-		data['zkhost'] = self.host
-		data['zkport'] = self.port
-		mega_data.append(data)
-
-		return json.dumps(mega_data)
+		return mega_data
 
 	#Get the graph nodes in form of json
 	def get_edges_json(self, new_zk):
 		mega_data = []
 		#data['key'] = 'value'
 
-		producers = self.show_all_producers(new_zk)
-		consumers = self.show_all_consumers(new_zk)
+		prods = self.show_all_producers(new_zk)
+		cons = self.show_all_consumers(new_zk)
 		#Generate the data to pass to the sketching graph
-		for p in producers:
-			topics = self.show_producer_topics(new_zk,p)
-			for t in topics:
+		if prods is not None:
+			# Producers are available
+			# Get all the amazing data
+			for p in prods:
+				topics = self.show_producer_topics(new_zk,p)
+				for t in topics:
+					data = {}
+					data['source'] = p
+					data['target'] = t
+					data['weight'] = 1;
+					mega_data.append(data)
+
+			for c in cons:
+				topics = self.show_consumer_topics(new_zk,c)
+				for t in topics:
+					data = {}
+					data['source'] = t
+					data['target'] = c
+					data['weight'] = 1;
+					mega_data.append(data)
+
+			#Connect all to a source root node
+			for p0 in self.show_unique_producers(new_zk):
 				data = {}
-				data['source'] = p
-				data['target'] = t
+				data['source'] = 'root'
+				data['target'] = p0
 				data['weight'] = 1;
 				mega_data.append(data)
 
-		for c in consumers:
-			topics = self.show_consumer_topics(new_zk,c)
-			for t in topics:
-				data = {}
-				data['source'] = t
-				data['target'] = c
-				data['weight'] = 1;
-				mega_data.append(data)
+		else:
+			# Producer information not available
+			# only use the consumers and topics
+			for c in cons:
+				topics = self.show_consumer_topics(new_zk,c)
+				for t in topics:
+					data = {}
+					data['source'] = t
+					data['target'] = c
+					data['weight'] = 1;
+					mega_data.append(data)
 
-		#Connect all to a source root node
-		for p0 in self.show_unique_producers(new_zk):
-			data = {}
-			data['source'] = 'root'
-			data['target'] = p0
-			data['weight'] = 1;
-			mega_data.append(data)
-		return json.dumps(mega_data)
+		return mega_data
 
+		#`	Get the largest weight
+	def get_largest_weight(self, new_zk):
+		a = self.get_node_with_largest_weight(new_zk)["weight"]
+		#print "Largest: " + str(a)
+		return a
+
+	#`	Get the smallest weight
+	def get_smallest_weight(self, new_zk):
+		a = self.get_node_with_smallest_weight(new_zk)["weight"]
+		#print "Smallest: " + str(a)
+		return a
+
+	#	Get the node with the largest weight
+	def get_node_with_largest_weight(self, new_zk):
+		nodes = self.get_nodes_json(new_zk)
+		w = 0
+		largest_node = None
+
+		for n in nodes:
+			if n['weight'] > w:
+				w = n['weight']
+				largest_node = n
+		#print "Largest node: " + str(largest_node)
+		return largest_node
+
+	#	Get the node with the smallest weight
+	def get_node_with_smallest_weight(self, new_zk):
+		nodes = self.get_nodes_json(new_zk)
+		w = 1000000
+		smallest_node = None
+
+		for n in nodes:
+			if n['weight'] < w:
+				w = n['weight']
+				smallest_node = n
+
+		return smallest_node
 	#
 	#
 	#	END OF FUNCTIONS

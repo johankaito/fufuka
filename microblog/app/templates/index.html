@@ -3,12 +3,114 @@
 <link rel="stylesheet" type="style/css" href="{{ style_url }}"/>    
 {% endblock %}
 {% block content %}
-    <p class="important">
-      Welcome to {{ page_title }}
-    </p>
-    {% block zk_clients %}
-        <p>
-            Running zk client on: <a href="/zk">{{ zk_client }}</a>
-        </p>
-    {% endblock %}
-{% endblock %}
+<p class="important">
+	Welcome to {{ page_title }}
+</p>
+{% block zk_clients %}
+<p class="selection">
+	<fieldset>
+		<legend>Start Visualization</legend>
+		<input type="radio" name="locationlocal" value="local" checked="checked">
+		Locally:
+	</input>
+	<input type="radio" name="locationremote" value="remote">
+	Remotely:
+</input>
+<form action="/" method="POST" name="localform" id="localform">
+	<p>
+		<input type="text" name="zkhostnameport" id="localHostname" placeholder="<hostname>:<port>"></input>
+	</p>
+</form>
+<form hidden action="/" method="POST" name="remoteform" id="remoteform">
+	<div class="remote_input_wrapper">
+		<div class="jmx_ports_wrapper">
+			<div>
+				<p>
+					<label id="hostlabel">Hostname:</label>
+					<input type="text" name="zkhostnameport" id="zkHostname" placeholder="<hostname>:<zkport>"></input>
+				</p>
+			</div>
+			<div>
+				<p>
+					<label id="usrlabel">JMX Ports</label>
+					<input type="text" name="hostname" id="remoteHostname" placeholder="<hostname>"></input>
+					<input type='numerical' name='jmx0' class='form-control' placeholder="<jmx_port>"></input>
+				</p>
+			</div>
+		</div>
+		<button type="button" id="addJMXPortsButton">Add JMX Port</button>
+		<p>
+			<label id="usrlabel">Username:</label>
+			<input type = "text"
+			name="username" id = "username"></input>
+		</p>
+		<p>
+			<label id="pslabel">Password:</label>
+			<input type = "password"
+			name="password" id = "password"></input>
+		</p>
+	</div>
+</form>
+<button type="button" id="connectButton">Connect</button>
+</fieldset>
+
+</p>
+<p hidden>
+	Running zk client on: <a href="/zk">{{ zk_client }}</a>
+</p>
+<script>
+	/*
+	*What to do when "Remotely" is selected
+	*/
+	$("input[value=remote]").click(function(){
+		if($("input[value=remote]").is(":checked")){
+			$("#localform").hide();
+			$("#remoteform").show();
+			$("input[value=remote]").attr("checked", true);
+			$("input[value=local]").attr("checked", false);
+		}
+	});
+   	/*
+	*What to do when "Locally" is selected
+	*/
+	$("input[value=local]").click(function(){
+		if($("#username").is(":visible")){
+			$("#localform").show();
+			$("#remoteform").hide();
+			$("input[value=remote]").attr("checked", false);
+			$("input[value=local]").attr("checked", true);
+		}
+	});
+
+	/*
+	*What to do when add JMX Port is clicked
+	*/
+	//var portCounter = 1;
+	$("#addJMXPortsButton").click(function (e) {
+		e.preventDefault();
+		//console.log(portCounter);
+    	$(".jmx_ports_wrapper").append("<div><p><input type='numerical' placeholder='<jmx_port>'' name='jmx' class='form-control'><button type='button' class='remove_field'>Remove</button></p></div>"); //add input box
+    	//portCounter++;
+    	//console.log(portCounter);
+
+    });
+
+
+	$(document).on("click",".remove_field",function(){
+		$(this).parent().remove();
+		//portCounter--;
+		//console.log(portCounter);
+
+	});
+	/*
+	*What to do when "Submit" is clicked
+	*/
+	$("#connectButton").click(function(){
+		if($("#localform").is(":hidden")){
+			$("#remoteform").submit();
+		}else
+		$("#localform").submit();
+	});
+	</script>
+	{% endblock %}
+	{% endblock %}

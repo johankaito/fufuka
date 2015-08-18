@@ -40,35 +40,86 @@
         </div>
     </div> -->
     <div id="digraph-frame">
-        <iframe src="/test" scrolling="no"></iframe>
+        <fieldset id="digraph-fieldset">
+            <legend id="digraph-legend">Zookeeper</legend>
+            <iframe id="d3-iframe" src="/test" scrolling="no" frameBorder="0" ></iframe>
+        </fieldset>
     </div>
 <!--     <div id="current-frame">
         <iframe src="/current_node" marginwidth="0" marginheight="0" scrolling="no"></iframe>
     </div> -->
-    <div class="text-area">
+   <!--  <div class="text-area">
         <textarea id="topic-text-area"></textarea>
-    </div>
+    </div> -->
     <script type="text/javascript">
-//Get the latest JMX data
-//     setInterval(function(){
-//    function obtainedResult(data) {
-//         $("#topic-text-area").val(data);
-//     }
-//     $.ajax({
-        
-//         url: "http://" + {{ host }} + ":8778/jolokia/read/kafka.server:type=BrokerTopicMetrics,name=MessagesInPerSec,topic=*",
-//         type: "get",
-//         datatype:"json",        
-//         success: function(response){
-//         // Execute our callback function
-//         obtainedResult(response);
-// }
-// });
 
-    // }, 1000);
-    </script>
-    {% block footer %}
+        //Update the timestamp at the top
+        setInterval( function(){
+            var time = new Date($.now());
+            var data = {{ data }};
+            $("#digraph-legend").text("Zookeeper: " + data.zkinfo  + "    Time: " + time);
+        }, 1000);
+
+        // $(".wrapper").width($(document).width() - ($(document).width()*0.08));
+        // $(".wrapper").height($(document).height() - ($(document).height()*0.08));
+        // $("#digraph-fieldset").width($(document).width() - ($(document).width()*0.11));
+        // $("#digraph-fieldset").height($(document).height() - ($(document).height()*0.18));
+        // $("#digraph-frame").width($(document).width() - ($(document).width()*0.05));
+        // $("#digraph-frame").height($(document).height() - ($(document).height()*0.5));
+        
+        $(window).resize(function() {
+            //Resize the diagraph frame
+            if( $(window).width() <= 750 ){
+                $(".wrapper").width(700);
+                $("#digraph-frame").width(680);
+                $("#digraph-fieldset").width(660);
+            }else if( $(window).width() <= 900 ){
+                $(".wrapper").width(750);
+                $("#digraph-frame").width(730);
+                $("#digraph-fieldset").width(710);
+            }else if( $(window).width() <= 1300 ){
+                $(".wrapper").width(950);
+                $("#digraph-frame").width(930);
+                $("#digraph-fieldset").width(910);
+            }else{
+                $(".wrapper").width(1300);
+                $("#digraph-frame").width(1200);
+                $("#digraph-fieldset").width(1100);
+            }
+
+            //Height
+            if( $(window).height() <= 250 ){
+                $(".wrapper").height(250);
+                $("#digraph-frame").height(230);
+                $("#digraph-fieldset").height(210);
+            }
+            else if( $(window).height() <= 500 ){
+                $(".wrapper").height(350);
+                $("#digraph-frame").height(330);
+                $("#digraph-fieldset").height(310);
+            }
+            else if( $(window).width() <= 1000 ){
+                $(".wrapper").height(500);
+                $("#digraph-frame").height(530);
+                $("#digraph-fieldset").height(510);
+            }else{
+                $(".wrapper").height(800);
+                $("#digraph-frame").height(750);
+                $("#digraph-fieldset").height(700);
+            }
+                    // $(".wrapper").width($(document).width() - ($(document).width()*0.08));
+            // $(".wrapper").height($(document).height() - ($(document).height()*0.08));
+            // $("#digraph-fieldset").width($(document).width() - ($(document).width()*0.11));
+            // $("#digraph-fieldset").height($(document).height() - ($(document).height()*0.18));
+            // $("#digraph-frame").width($(document).width() - ($(document).width()*0.05));
+            // $("#digraph-frame").height($(document).height() - ($(document).height()*0.5));
+            //reload the iframe
+            $( '#d3-iframe' ).attr( 'src', function ( i, val ) { return val; });
+
+        });
+        </script>
+        {% block footer %}
+        {% endblock %}
+    </div>
     {% endblock %}
-</div>
-{% endblock %}
 

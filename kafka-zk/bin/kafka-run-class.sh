@@ -76,14 +76,16 @@ do
   CLASSPATH=$CLASSPATH:$file
 done
 
-# JMX settings
+# JMX settings -Dcom.sun.management.jmxremote.port=9998
 if [ -z "$KAFKA_JMX_OPTS" ]; then
-  KAFKA_JMX_OPTS="-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false  -Dcom.sun.management.jmxremote.ssl=false "
+  KAFKA_JMX_OPTS="-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false  -Dcom.sun.management.jmxremote.ssl=false"
 fi
 
 # JMX port to use
 if [  $JMX_PORT ]; then
+  echo "SETTING JMX PORT AGAIN: " + $JMX_PORT
   KAFKA_JMX_OPTS="$KAFKA_JMX_OPTS -Dcom.sun.management.jmxremote.port=$JMX_PORT "
+  sleep 4
 fi
 
 # Log4j settings

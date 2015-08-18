@@ -7,7 +7,7 @@ from app import app
 # app.run(debug=False)
 # Set the port where application should run
 ip = socket.gethostbyname(socket.gethostname());
-print "Run: Host is="+ip 
+print "Flask starting: " + ip 
 
 app.run(
 	debug=True,
