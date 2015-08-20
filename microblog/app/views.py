@@ -20,6 +20,9 @@ import threading
 #For async tasks
 from celery import Celery
 
+#For doing msg_out rate calculations
+import math
+
 #messages_in_topic_per_second = 'java -cp $JAVA_HOME/lib/tools.jar:../target/scala-2.10/cjmx.jar cjmx.Main 3628 \"mbeans \'kafka.server:type=BrokerTopicMetrics,name=MessagesInPerSec,*\' select *\"'
 #For getting the process id of kafka
 #import os
@@ -47,6 +50,29 @@ remote = "remote"
 #CSS File
 #reading_from={}
 reading_from=""
+
+#Store the offsets for each topic all consumers consume from
+#Objects for keeping track of rates for CONSUMERS
+prev_consumer_info = {}
+prev_consumer_counts = {}
+
+#Store the accumulated offset
+accumulated_topic_rates = {}
+
+consumers = ""
+
+#Stores information for msgs_out
+second_counter = 0
+seconds_in_a_day = 86400 #(60*60*24)
+
+#Objects for keeping track of rates for TOPICS
+topic_sums = {}
+prev_topic_info = {}
+prev_topic_counts = {}
+
+
+
+
 #reading_from["data"] = None
 #
 #
@@ -54,6 +80,7 @@ reading_from=""
 #
 #
 
+#	The thing that the user sees
 @app.route('/')
 @app.route('/index')
 def index():
@@ -64,6 +91,7 @@ def index():
 
 	return template.render(page_title=title, zk_client=client_url)
 
+#	Gets all the form data from the "Start visualization page"
 @app.route('/', methods=['POST'])
 def index_return_values():
 	print "Index_return_values called"
@@ -120,9 +148,14 @@ def index_return_values():
 
 	#Once the returned values are found, set them all
 	#Get consumers and producers
-	producers = ext_client.show_all_producers(zk)
-	consumers = ext_client.show_all_consumers(zk)
+
 	topics = ext_client.show_all_topics(zk)
+
+	#Populate topic holder
+	for t in topics:
+		topic_sums[t] = 0
+		prev_topic_info[t] = {}
+		prev_topic_counts[t] = []
 
 	global json_topics
 	json_topics = json.dumps(topics)
@@ -137,38 +170,39 @@ def index_return_values():
 
 	return redirect("/zk")
 
+#	Main viewing area for zks
 @app.route('/zk')
 def zk_client():
 	print "/zk called"
+
+	#Set the consumers then continously calculate their offsets
+	global consumers
+	consumers = ext_client.show_all_consumers(zk)
+	#Populate consumer holders
+	for c in consumers:
+		prev_consumer_info[c] = {}
+		prev_consumer_counts[c] = []
+
+	for c in consumers:
+		topics = ext_client.show_topics_consumed(zk, c)
+		for t in topics:
+			prev_consumer_info[c][t] = {}
+			#print prev_consumer_info
+
+
+	print "Done----"
+	calculate_offsets()
+
+	#Set the template of the page
 	template = env.get_template('zk_client.html')
-	brokers = ext_client.show_brokers_ids(zk)
+	#brokers = ext_client.show_brokers_ids(zk)
 
 	#Get the information of the current zookeeper instance
 	data = {}
-	
 	data["zkinfo"] = str(ext_client.url_port)
 	return template.render(data=data)#consumers=consumers, brokers=brokers, producers=producers, topics=topics)#, r=r.content)
 
-#	Takes care of the graph that shows up
-@app.route('/graph')
-def draw_graph():
-	print "/graph"
-	template = env.get_template('graph.html')
-	#print json_data
-	return template.render(json_data=json_data)
-
-#	Takes care of the currently selected node
-@app.route('/current_node')
-def draw_node():
-	print "Draw node called"
-	template = env.get_template('node.html')
-	return template.render(json_data=json_data)
-
-@app.route('/orgraph')
-def or_graph():
-	template = env.get_template('orgraph.html')
-	return template.render(json_data=json_data)
-
+#	Loads the d3 graph onto the iframe
 @app.route('/test')
 def test_2():
 	print "/test called"
@@ -194,3 +228,135 @@ def test_2():
 
 	#print data
 	return template.render(data=sendData)#json_data=json_data, json_nodes=json_nodes, json_topics=json_topics, js_url=js_url, host=host, remote_server=remote_server, readingFrom=reading_from)
+
+#	Method to return offset rates
+def get_rate(rate_type, prevData):
+	one_minute = 60
+	if rate_type == "minute":
+		#Get the minute rate
+		if len(prevData) > one_minute:
+			#print " Min rate "
+			#print "L: " + str(prevData[second_counter+1]) + " S: " + str(prevData[second_counter-one_minute])
+			#min_rate = abs(prevData[second_counter+1] - prevData[second_counter-one_minute])
+			min_rate = abs(prevData[second_counter] - prevData[second_counter-one_minute])/(one_minute + 0.0)
+			return min_rate
+		else:
+			min_rate = 0
+			return min_rate
+
+	if rate_type == "mean":
+		#Get the mean rate
+		global second_counter
+		if second_counter > 0:
+			#print " Mean rate"
+			#Method 1
+			#global predata_sum
+			#mean_rate = predata_sum/(second_counter+0.0)
+			
+			#Method 2
+			# print "L: " + str(prevData[second_counter+1]) + " S: " + str(prevData[0])
+			# mean_rate = abs(prevData[second_counter+1] - prevData[0])/(second_counter+0.0)
+
+			#Method 3
+			# print " ArrLen: " + str(len(prevData))
+			# print " SC: " + str(second_counter)
+			# print " L: " + str(prevData[second_counter])+ " S: " + str(prevData[0])
+			mean_rate = abs(prevData[second_counter] - prevData[0])/(second_counter+0.0)
+			#print " MeanR " + str(mean_rate)
+			return mean_rate
+
+		else:
+			mean_rate = -1
+			return mean_rate
+
+
+# 	Threaded method which calculates the offsets
+def calculate_offsets():
+	#Get individual offsets of a consumer
+	for c in consumers:
+		global prev_consumer_info
+		#prev_consumer_info[c] = {}
+		topics = ext_client.show_topics_consumed(zk, c)
+		for t in topics:
+			#
+			#
+			#	Consumer Rates
+			#
+			#
+			# Get the offsets for every consumer and correpsonding topic
+			offset = ext_client.get_consumer_offset(zk, c, t)
+
+			#Append count to the array holder
+			prev_consumer_counts[c].append(offset)
+
+			#Get the msg_out_minute_rate for this topic
+			min_rate = get_rate("minute", prev_consumer_counts[c])
+			#print "Min: " + str(min_rate)
+			mean_rate = get_rate("mean", prev_consumer_counts[c])
+			#print "Mean: " + str(mean_rate)
+
+			if mean_rate == -1:
+				mean_rate = 0
+			#Update the holder for this topic
+			global prev_consumer_info
+			prev_consumer_info[c][t]["count"] = offset
+			prev_consumer_info[c][t]["min_rate"] = min_rate
+			prev_consumer_info[c][t]["mean_rate"] = mean_rate
+
+			#
+			#
+			#	Topic rates
+			#
+			#
+			#Get the count for this topic
+			count = ext_client.get_accumulated_topic_offset(zk, t)
+
+			#Update the sum for this topic
+			topic_sums[t] = topic_sums[t] + count
+
+			#Append count to the array holder
+			prev_topic_counts[t].append(count)
+
+			#Get the msg_out_minute_rate for this topic
+			min_rate = get_rate("minute", prev_topic_counts[t])
+			mean_rate = get_rate("mean", prev_topic_counts[t])
+
+			if mean_rate == -1:
+				mean_rate = 0
+			#Update the holder for this topic
+			global prev_topic_info
+			prev_topic_info[t]["count"] = count
+			prev_topic_info[t]["min_rate"] = min_rate
+			prev_topic_info[t]["mean_rate"] = mean_rate
+
+	global second_counter
+	second_counter = second_counter + 1
+	
+	#Reset the rate calculations every 24hrs
+	if second_counter == seconds_in_a_day:
+		second_counter = 0
+
+	threading.Timer(1, calculate_offsets).start()
+
+#	Returns the consumer offsets
+@app.route('/getconsumerrates')
+def get_consumer_offsets():
+	return json.dumps(prev_consumer_info)
+
+#	Returns the accumulated offsets for each topic
+@app.route('/getaccumulatedrates')
+def get_accumulated_offsets():
+	return json.dumps(prev_topic_info)
+
+
+#	Takes care of the currently selected node
+@app.route('/current_node')
+def draw_node():
+	print "Draw node called"
+	template = env.get_template('node.html')
+	return template.render(json_data=json_data)
+
+@app.route('/orgraph')
+def or_graph():
+	template = env.get_template('orgraph.html')
+	return template.render(json_data=json_data)

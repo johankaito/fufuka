@@ -7,371 +7,10 @@
 	<script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
 	<script>
 
-/*
-*
-*
-*     D3 GRAPHING STUFF
-*
-*
-*/ 
-
-//Whenever window resizing happens, do the following
-// $(window).resize(function() {
-//   //resize just happened, pixels changed
-//   console.log("Window resized");
-//   width = $(window).width();
-//   height = $(window).height();
-
-//   //Reposition the rootnode
-//   rootX = w/2, rootY = h/2;
-
-//   //Resize the svg
-//   svg = d3.select("body").append("svg")
-//     //.attr("class", "svg-window");
-//     .attr("width", width)
-//     .attr("height", height);
-// });
-
-
-//kafka.common.FailedToSendMessageException
-// http://blog.thomsonreuters.com/index.php/mobile-patent-suits-graphic-of-the-day/
+//Get all the needed data
 var data = {{ data }}
-//var links = {{ json_data }};
-//console.log("JSON data: " + data.json_data);
-var links = JSON.parse(data.json_data);
-
-var nodes = {};
-var curTop = "";
-//Get the data on
-//var nodes_data = {{ json_nodes }};
-var nodes_data = JSON.parse(data.json_nodes);
-
-//console.log(nodes_data);
-//var nodes_data_json = JSON.parse(nodes_data);
-
-var node_positions = {};
-var node_objects = nodes_data;
-
-for(i=0; i<nodes_data.length; i++){
-  //node_obj = {};
-  //console.log("Added: " + node_objects[i].name + " type: " + node_objects[i].type);
-  node_positions[nodes_data[i].name] = i;
-}
-
-
-var w = $(document).width();
-var h = $(document).height();
-console.log($(document).width());
-console.log($(document).height());
-
-
-// if( $(window).width() <= 900 ){
-//   w = 850;
-// }
-// else if( $(window).width() >= 1400 ){
-//   w = 1300;
-// }
-// else{
-//   w = 1400;
-// }
-// if( $(window).height() <= 500 ){
-//   h = 400;                
-// }
-// else if( $(window).height() <= 1000 ){
-//   h = 750;                
-// }else{
-//   h = 750
-// }
-
-// $(window).resize(function() {
-//     //Resize the diagraph frame
-
-//     if( $(window).width() <= 900 ){
-//       w = 800;
-//     }
-//     if( $(window).height() <= 600 ){
-//       h = 500;                
-//     }
-//     if( $(window).width() >= 1400 ){
-//       w = 1300;
-//     }
-//     if( $(window).height() <= 1000 ){
-//       h = 900;                
-//     }
-//     $( '#d3-iframe' ).attr( 'src', function ( i, val ) { return val; });
-
-// });
-//Position the rootnode
-var rootX = w/2, rootY = h/2;
-
-// Compute the distinct nodes from the links.
-//[].forEach.call(links,function(link) {
-links.forEach(function(link) {
-	//console.log(link.source + "->" + link.target);
-	if( link.type != null ){
-		//At root node
-		link.source = nodes[link.source] || (nodes[link.source] = {name: link.source, type: link.type, fixed: true, x: rootX, y: rootY}); 
-	}else{
-		link.source = nodes[link.source] || (nodes[link.source] = {name: link.source, type: link.type}); 
-	}
-
-	link.target = nodes[link.target] || (nodes[link.target] = {name: link.target, type: link.type});
-});
-
-var width = w,
-height = h,
-border = 1,
-bordercolor='black';
-
-var force = d3.layout.force()
-.nodes(d3.values(nodes))
-.links(links)
-.size([width, height])
-.linkDistance(100) //60
-.charge(-300)
-.on("tick", tick)
-.start();
-
-var svg = d3.select("body").append("svg")
-//.attr("class", "svg-window");
-.attr("width", width)
-.attr("height", height);
-//.attr("border",border);
-
-// var borderPath = svg.append("rect")
-//   .attr("x", 0)
-//   .attr("y", 0)
-//   .attr("height", h)
-//   .attr("width", w)
-//   .style("stroke", bordercolor)
-//   .style("fill", "none")
-//   .style("stroke-width", border);
-
-// Per-type markers, as they don't inherit styles.
-// build the arrowehead
-svg.append("svg:defs").selectAll("marker")
-.data(["end"])
-.enter().append("svg:marker")
-.attr("id", function(d) { return d; })
-.attr("viewBox", "0 -5 10 10")
-.attr("refX", 15)
-.attr("refY", -1.5)
-.attr("markerWidth", 6)
-.attr("markerHeight", 6)
-.attr("orient", "auto")
-.append("svg:path")
-.attr("d", "M0,-5L10,0L0,5");
-
-//console.log("Links:");
-//console.log(force.links());
-/*  Create the link between nodes */
-var path = svg.append("svg:g").selectAll("path")
-.data(force.links())
-.enter().append("svg:path")
-.attr("id", function(d){
-  //console.log(d.source.name + "-" + d.target.name);
-  return d.target.name;
-})
-.attr("class", "link")//function(d) { return "link " + d.type; })
-.attr("marker-end", "url(#end)")//function(d) { return "url(#" + d.type + ")"; });
-.attr('stroke-width', function(d) { 
-    return 1.5; 
-  });
-
-
-// The tool tip
-var tip = d3.tip()
-.attr('class', 'd3-tip')
-.offset([-10, 0])
-.html(function(d){
-  //console.log("Sending: " + d.name );
-  return determineTipResult(d);
-});
-
-function updateTip(tip, element){
-  tip.html(function(element){
-    return determineTipResult(element);
-  });
-}
-
-function determineTipResult(d){
-    //console.log("Requested: " + d.name);
-
-    //Keep track of the currently selected node
-    curTop = d.name;
-    n = node_objects[node_positions[d.name]];
-   //console.log("Got: " + n.name + " type: " + n.type);
-   if( n.type == "topic"){
-    // return "<ul class=\"topic\"><li>Name: <span id=\"name\" style='color:red'>" + n.name + "</span></li><li>Type: <span id=\"type\" style='color:red'>" + n.type + "</span></li><li>One_Minute_Rate(msgs/s): <span id=\"oneminuterate\" style='color:red'>" + n.one_min_rate + "</span></li><li>MeanRate: <span id=\"meanrate\" style='color:red'>" + n.mean_rate + "</span></li><li>Total_Messages: <span id=\"count\" style='color:red'>" + n.count + "</span></li><li>ConnectedServers: <span id=\"weight\" style='color:red'>" + n.weight + "</span></li><li>Timestamp: <span id=\"timestamp\" style='color:red'>" + n.timestamp + "</span></li></ul>";
-    return "<h3 class=\"topic-tip-heading\">Topic: " + n.name + "</h3><table class=\"messages\" border=\"1\"><caption id=\"messages-heading\">Messages</caption><tr><td>Per second</td><td>In</td><td>Out</td></tr><tr><td>One_Min_Rate</td><td><span id=\"oneminuterate\" style='color:red'>" + n.msg_one_min_rate + "</td><td></td></tr><tr><td>Count</td><td><span id=\"count\" style='color:red'>" + n.msg_count + "</td><td></td></tr><tr><td>Mean_Rate</td><td><span id=\"meanrate\" style='color:red'>" + n.msg_mean_rate + "</td><td></td></tr></table><table class=\"bytes\" border=\"1\"><caption id=\"bytes-heading\">Bytes</caption><tr><td>Per second</td><td>In</td><td>Out</td></tr><tr><td>One_Min_Rate</td><td><span id=\"inoneminuterate\" style='color:red'>" + n.in_byte_one_min_rate + "</td><td><span id=\"outoneminuterate\" style='color:red'>" + n.out_byte_one_min_rate + "</td></tr><tr><td>Count</td><td><span id=\"incount\" style='color:red'>" + n.in_byte_count + "</td><td><span id=\"incount\" style='color:red'>" + n.out_byte_count + "</td></tr><tr><td>Mean_Rate</td><td><span id=\"inmeanrate\" style='color:red'>" + n.in_byte_mean_rate + "</td><td><span id=\"outmeanrate\" style='color:red'>" + n.out_byte_mean_rate + "</td></tr></table>";
-  }
-  else if( n.type == "consumer_producer"){
-    return "<h3 class=\"conprod-tip-heading\">Consumer-Producer: " + n.name + "</h3><ul class=\"consumer-producer\"><li>Consumes from: <span style='color:red'>" + n.getsfrom + "</span></li><li>Produces to: <span style='color:red'>" + n.poststo + "</span></li><li>Neighbors: <span style='color:red'>" + n.weight + "</span></li></ul>";
-  }
-  else if( n.type == "consumer"){
-    return "<h3 class=\"con-tip-heading\">Consumer: " + n.name + "</h3><ul class=\"consumer\"><li>Consumes from: <span style='color:red'>" + n.getsfrom + "</span></li><li>Neighbors: <span style='color:red'>" + n.weight + "</span></li></ul>";
-  }
-  else if( n.type == "producer"){
-    return "<h3 class=\"prod-tip-heading\">Producer: " + n.name + "</h3><ul class=\"producer\"><li>Produces to: <span style='color:red'>" + n.poststo + "</span></li><li>Neighbors: <span style='color:red'>" + n.weight + "</span></li></ul>";
-  }
-  else if( n.type == "root"){
-   return "<ul id=\"root\"><li>Name: <span style='color:red'>" + n.name + "</span></li><li>zk_host: <span style='color:red'>" + n.zkhost + ":" + n.zkport + "</span></li></ul>";
- }
-}
-
-
-//Call the tool tip
-svg.call(tip);
-var circleClicked = null;
-// Create the actual nodes */
-var circle = svg.append("g").selectAll("circle")
-.data(force.nodes())
-.enter().append("circle")
-.attr("r", function(d){
-  //Get the rest of information of the node
-  node = node_objects[node_positions[d.name]];
-  //Radious of circle depends on how many other nodes it is connected to
-  var numNeigh = node.weight;
-  var maxNeigh = data.largest_weight;
-  var minNeigh = data.smallest_weight;
-
-  var maxRad = 16;
-  var minRad = 4;
-
-  //console.log("larg: " + maxNeigh);
-  //console.log("smal: " + minNeigh);
-  if( maxNeigh == minNeigh || minRad == maxRad)
-    return 6;
-  else {
-    return minRad + ((numNeigh - minNeigh)*(maxRad-minRad))/(maxNeigh - minNeigh)
-  }
-  // if( numNeigh == 1 )
-  //   return 4;
-  // if( numNeigh == 2 )
-  //   return 6;
-  // if( numNeigh == 3 )
-  //   return 8;
-  // if( numNeigh == 4 )
-  //   return 10;
-  // if( numNeigh == 5 )
-  //   return 12;
-  // if( numNeigh >= 6 )
-  //   return 14;
-  // else
-  //   return 6;
-})//6
-.attr('id', 'circle')
-.style("fill", function (d) { 
-  //Get the rest of information of the node
-  //console.log("node name is: " + d.name);
-  node = node_objects[node_positions[d.name]];
-  //console.log("obtined: " + node.name);
-
-	//console.log("in fill. node type is: "+ node.name)
-	if(node.name == 'root')
-		return '#d62728'; //RED
-	if(node.type == 'topic')
-		return '#6baed6'; //BLUE
-	if(node.type == 'producer')
-		return '#31a354'; //'#31a354'; //GREEN
-	if(node.type == 'consumer_producer')
-		return '#31a354'; //'#31a354'; //GREEN
-  if(node.type == 'consumer')
-    return '#31a354'; //'#31a354'; //GREEN
-
-})
-.attr("nodes", function(node){
-	//console.log("in new function " + node.name);
-	return node;
-}) 
-.on('mouseover', 
-  function(d){
-    //console.log("Hovering over. Circle clicked is: " + circleClicked);
-    tip.show(d);
-
-
-  })
-.on('mouseout', 
-  function(d){
-    //console.log("Hovering away. Circle clicked is: " + circleClicked);
-    if( circleClicked == null ){
-      tip.hide(d);
-    }
-  })
-.on('dblclick',
-  function(d){
-    //tip.show(d);
-    if( circleClicked == null){
-      //console.log("Circle clicked is: " + circleClicked);
-      circleClicked = d.name;
-      tip.show(d);
-    }else{
-      //console.log("Circle clicked is: " + circleClicked);
-      tip.hide(d);
-      circleClicked = null;
-    }
-  })
-.call(force.drag); // This makes the circles draggable
-
- //Handle what is clicked
-// $(document).click(function(){
-//   console.log("Circle clicked is: " + circleClicked);
-//   if(circleClicked != null){
-//     circleClicked = null;
-//     $(".d3-tip").hide();
-//   }else{
-//    }
-// });
-
-
-// Displays the name of the node
-var text = svg.append("g").selectAll("text")
-.data(force.nodes())
-.enter().append("text")
-.attr("x", 8)
-.attr("y", ".31em")
-.text(function(d) { 
-	return d.name; 
-});
-
-// Use elliptical arc path segments to doubly-encode directionality.
-function tick() {
-	path.attr("d", linkArc);
-  //path.attr("stroke-width", getWidth)
-  circle.attr("transform", transform);
-  text.attr("transform", transform);
-}
-
-// function getWidth(d){
-//   console.log("d.name: " + d.source);
-//   return 9;
-// }
-function linkArc(d) {
-	var dx = d.target.x - d.source.x,
-	dy = d.target.y - d.source.y,
-			//dr = Math.sqrt(dx * dx + dy * dy); // CURVED
-			dr = 0; // STRAIGHT
-			return "M" + d.source.x + "," + d.source.y + "A" + dr + "," + dr + " 0 0,1 " + d.target.x + "," + d.target.y;
-		}
-
-		function transform(d) {
-			return "translate(" + d.x + "," + d.y + ")";
-		}
-
-/*
-*
-*
-*     END OF D3 GRAPHING STUFF
-*
-*
-*/
-
-
-
-
 
 //Get kafka topics
-//var topics = {{ json_topics }};
 var topics = JSON.parse(data.json_topics);
 
 // console.log("Topics received ")
@@ -412,9 +51,6 @@ var minRate = 0.65;
 
 //Get the latest JMX data
 function obtainedResult(data, type) {
-
-
-
   //Log the data
   //console.log("Data for: " + type);
   
@@ -433,7 +69,7 @@ function obtainedResult(data, type) {
   //console.log("length of topics: " + topics.length);
   for(i=0; i<topics.length; i++){
     //Name of object
-    name = topics[i];
+    var name = topics[i];
     //console.log("inside for loop " + name);
     if( type == "msgsin"){
       var tmp1 = "kafka.server:name=MessagesInPerSec,topic=" + name +",type=BrokerTopicMetrics";
@@ -449,62 +85,133 @@ function obtainedResult(data, type) {
         continue;
       }
 
+
       //Get the count (total msgs)
       //console.log("Updating msgs");
-      msg_count = getTotal(res);
+      in_msg_count = getTotal(res);
       //console.log("Total msgs are: " + msg_count);
 
       //Get the mean rate
-      msg_mean_rate = getRate(0, res);
+      in_msg_mean_rate = getRate(0, res);
       //console.log("Mean rate: " + mean_rate);
 
       //Get the one minute rate
-      msg_one_min_rate = getRate(1, res);
+      in_msg_one_min_rate = getRate(1, res);
 
       // Get the object to it's natural position
       t_obj = node_objects[node_positions[name]];
 
       //Add the values to the t_object
       //t_obj.name = name;
-      t_obj.msg_count = msg_count;
-      t_obj.msg_mean_rate = msg_mean_rate;
-      t_obj.msg_one_min_rate = msg_one_min_rate;
+      t_obj.in_msg_count = in_msg_count;
+      t_obj.in_msg_mean_rate = in_msg_mean_rate;
+      t_obj.in_msg_one_min_rate = in_msg_one_min_rate;
       t_obj.timestamp = new Date(timestamp);
 
-      // Add object to it's natural position
-      node_objects[node_positions[name]] = t_obj;
 
+      //Update the root-out arrow thickness
+        //Read the offsets from python
+      $.get("/getconsumerrates", function(data) {
+        //console.log("Offsets in: ");
+        //var c = $.parseJSON(data)["node4"]["t1"];
+        var c = $.parseJSON(data);
+       // console.log("Consumer rates coming in");
+        //console.log(JSON.stringify(c));
 
-      //Update the arrow thickness
-      //Uses the MSGS last min rate
-      d3.select("path#"+name)
-        // .transition()
-        // .duration(300)
-        .attr('stroke-width', function() { 
-          //console.log("Mean rate")
-          var curRate = msg_one_min_rate;
-          if( curRate < minRate )
-            minRate = curRate;
-          if( curRate > maxRate )
-            maxRate = curRate;
-          //console.log("mean rate: " + curRate);
-
-          var maxThick = 3.25;
-          var minThick = 0.25;
-
-          //console.log("larg: " + maxNeigh);
-          //console.log("smal: " + minNeigh);
-          if( maxThick == minThick || minRate == maxRate)
-            return 1.5;
-          else if(  curRate < minRate )
-            return 0.25
-          else if ( curRate > maxRate)
-            return 4.00
-          else {
-            //console.log("Changing: " + name);
-            return minThick + ((curRate - minRate)*(maxThick-minThick))/(maxRate - minRate)
+        links.forEach(function(link) {
+          //Get the ID
+          var id = link.source.name + "-" + link.target.name;
+          var one_min_rate;
+          //console.log("SOurce: " + link.source.name + " Target: " + link.target.name);
+          //Get the current min_rate for MSGS
+          if( link.source.name != "root"){
+            //console.log("Not from root");
+            //if not root, update using date you obtained
+            one_min_rate = $.parseJSON(data)[link.target.name][link.source.name]["min_rate"];
+            //console.log("One min is: " + one_min_rate);
+          }else{
+            //If root, update using the data in this iteration
+            //console.log("From root");
+            one_min_rate = in_msg_one_min_rate;
+            //console.log("One min is: " + one_min_rate);
           }
+
+          //Uses the MSGS last min rate
+          d3.select("path#"+id)
+            // .transition()
+            // .duration(300)
+            .attr('stroke-width', function() { 
+              //console.log("Mean rate")
+              var curRate = one_min_rate;
+              if( curRate < minRate )
+                minRate = curRate;
+              if( curRate > maxRate )
+                maxRate = curRate;
+              //console.log("mean rate: " + curRate);
+
+              var maxThick = 3.25;
+              var minThick = 0.25;
+
+              //console.log("larg: " + maxNeigh);
+              //console.log("smal: " + minNeigh);
+              //console.log("About to update: " + id);
+              if( maxThick == minThick || minRate == maxRate)
+                return 1.5;
+              else if(  curRate < minRate )
+                return 0.25
+              else if ( curRate > maxRate)
+                return 4.00
+              else {
+                //console.log("Changing: " + name);
+                return minThick + ((curRate - minRate)*(maxThick-minThick))/(maxRate - minRate)
+              }
+            });
         });
+      });
+      //Uses the MSGS last min rate
+      // d3.select("path#root-"+name)
+      //   // .transition()
+      //   // .duration(300)
+      //   .attr('stroke-width', function() { 
+      //     //console.log("Mean rate")
+      //     var curRate = in_msg_one_min_rate;
+      //     if( curRate < minRate )
+      //       minRate = curRate;
+      //     if( curRate > maxRate )
+      //       maxRate = curRate;
+      //     //console.log("mean rate: " + curRate);
+
+      //     var maxThick = 3.25;
+      //     var minThick = 0.25;
+
+      //     //console.log("larg: " + maxNeigh);
+      //     //console.log("smal: " + minNeigh);
+      //     if( maxThick == minThick || minRate == maxRate)
+      //       return 1.5;
+      //     else if(  curRate < minRate )
+      //       return 0.25
+      //     else if ( curRate > maxRate)
+      //       return 4.00
+      //     else {
+      //       //console.log("Changing: " + name);
+      //       return minThick + ((curRate - minRate)*(maxThick-minThick))/(maxRate - minRate)
+      //     }
+      //   });
+
+      //Update the topics-out arrow thickness
+      // $.get("/getaccumulatedrates", function(data) {
+      //     //console.log("In: Topic is: " + top);
+      //     var c = $.parseJSON(data)[top];
+      //     //console.log("rates: " + top + ":" + JSON.stringify(c));
+          
+      //     t_obj.out_msg_count = c["count"];
+      //     t_obj.out_msg_mean_rate = c["mean_rate"];
+      //     t_obj.out_msg_one_min_rate = c["min_rate"];
+      //     $(".messages #outcount").text(t_obj.out_msg_count);
+      //     $(".messages #outmeanrate").text(t_obj.out_msg_mean_rate);
+      //     $(".messages #outoneminuterate").text(t_obj.out_msg_one_min_rate);
+
+      // })
 
       // if( curTop == name){
       // $(".topic").replaceWith("<ul class=\"topic\"><li>Name: <span style='color:red'>" + t_obj.name + "</span></li><li>Type: <span style='color:red'>" + t_obj.type + "</span></li><li>One_Minute_Rate(msgs/s): <span style='color:red'>" + t_obj.one_min_rate + "</span></li><li>MeanRate: <span style='color:red'>" + t_obj.mean_rate + "</span></li><li>Total_Messages: <span style='color:red'>" + t_obj.count + "</span></li><li>ConnectedServers: <span style='color:red'>" + t_obj.weight + "</span></li><li>Timestamp: <span style='color:red'>" + t_obj.timestamp + "</span></li></ul>");
@@ -513,11 +220,30 @@ function obtainedResult(data, type) {
 
 
       if( curTop == name){
-        $(".messages #count").text(t_obj.msg_count);
-        $(".messages #meanrate").text(t_obj.msg_mean_rate);
-        $(".messages #oneminuterate").text(t_obj.msg_one_min_rate);
+        //Read the accumulated offset of this topic from python
+        //console.log("Out: Topic is: " + name);
+        var top = name;
+        $.get("/getaccumulatedrates", function(data) {
+          //console.log("In: Topic is: " + top);
+          var c = $.parseJSON(data)[top];
+          //console.log("rates: " + top + ":" + JSON.stringify(c));
+          
+          t_obj.out_msg_count = c["count"];
+          t_obj.out_msg_mean_rate = c["mean_rate"];
+          t_obj.out_msg_one_min_rate = c["min_rate"];
+          $(".messages #outcount").text(t_obj.out_msg_count);
+          $(".messages #outmeanrate").text(t_obj.out_msg_mean_rate);
+          $(".messages #outoneminuterate").text(t_obj.out_msg_one_min_rate);
+
+        })
+        //console.log("Topic is: " + name);
+        $(".messages #incount").text(t_obj.in_msg_count);
+        $(".messages #inmeanrate").text(t_obj.in_msg_mean_rate);
+        $(".messages #inoneminuterate").text(t_obj.in_msg_one_min_rate);
         $(".tip-heading").text("Topic: " + t_obj.name); //+ " ->" + t_obj.timestamp);
-      }
+}
+      // Add object to it's natural position
+      node_objects[node_positions[name]] = t_obj;
 }
     // console.log("Right topic, before if");
     if( type == "bytesin"){
@@ -565,7 +291,7 @@ function obtainedResult(data, type) {
         $(".bytes #inmeanrate").text(t_obj.in_byte_mean_rate);
         $(".bytes #inoneminuterate").text(t_obj.in_byte_one_min_rate);
         $(".tip-heading").text("Topic: " + t_obj.name); //+ " ->" + t_obj.timestamp);
-      }
+}
 }
 
 if( type == "bytesout"){
@@ -574,7 +300,7 @@ if( type == "bytesout"){
       var startIndex = ret_str.indexOf(tmp1);
 
       if( startIndex >= 0){     
-        var t_obj = {};
+        //var t_obj = {};
         var endIndex = ret_str.indexOf(tmp2,startIndex) + tmp2.length;
         var res = ret_str.substring(startIndex, endIndex);
       }else{
@@ -695,8 +421,11 @@ setInterval(function(){
           success: function(response){
             obtainedResult(response, "msgsin");
             //console.log("New msgs infor: ");
-        }
-      });
+          },
+          error: function(err) {
+            alert("No connection to proxy port. Error: " + err);
+          }
+        });
         //Get the bytes in information
         $.ajax(
         {
@@ -705,8 +434,12 @@ setInterval(function(){
           type: "get",
           datatype:"json",        
           success: function(response){
+            console.log("success");
             obtainedResult(response, "bytesin");
           //console.log("New bytes infor");
+        },
+        error: function(err) {
+          alert("No connection to proxy port. Error: " + err);
         }
       });
         //Get the bytes out information
@@ -718,6 +451,9 @@ setInterval(function(){
           datatype:"json",        
           success: function(response){
             obtainedResult(response, "bytesout");
+          },
+          error: function(err) {
+            alert("No connection to proxy port. Error: " + err);
           }
         });
       });
@@ -745,7 +481,12 @@ setInterval(function(){
         sendData,
         function(response, status){
         //console.log("Data: " + response + "\nStatus: " + status);
-        obtainedResult(response, "msgsin");
+        if( status == "success" ){
+          obtainedResult(response, "msgsin");
+        }
+        else
+          alert("No connection to proxy port");
+
       });
 
       var data2 =     {
@@ -760,7 +501,11 @@ setInterval(function(){
         sendData,
         function(response, status){
         //console.log("Data: " + response + "\nStatus: " + status);
-        obtainedResult(response, "bytesin");
+        if( status == "success" ){
+          obtainedResult(response, "bytesin");
+        }
+        else
+          alert("No connection to proxy port");
       });
 
       var data3 =     {
@@ -774,15 +519,364 @@ setInterval(function(){
       $.post("http://localhost/jolokia/",
         sendData,
         function(response, status){
+        if( status == "success" ){
         //console.log("Data: " + response + "\nStatus: " + status);
-        obtainedResult(response, "bytesout");
+          obtainedResult(response, "bytesout");
+        }
+        else
+          alert("No connection to proxy port");
       });
     }
   }
 }, 1000);
 
 
+/*
+*
+*
+*     D3 GRAPHING STUFF
+*
+*
+*/ 
 
+//Whenever window resizing happens, do the following
+// $(window).resize(function() {
+//   //resize just happened, pixels changed
+//   console.log("Window resized");
+//   width = $(window).width();
+//   height = $(window).height();
+
+//   //Reposition the rootnode
+//   rootX = w/2, rootY = h/2;
+
+//   //Resize the svg
+//   svg = d3.select("body").append("svg")
+//     //.attr("class", "svg-window");
+//     .attr("width", width)
+//     .attr("height", height);
+// });
+
+
+//kafka.common.FailedToSendMessageException
+// http://blog.thomsonreuters.com/index.php/mobile-patent-suits-graphic-of-the-day/
+//var links = {{ json_data }};
+//console.log("JSON data: " + data.json_data);
+var links = JSON.parse(data.json_data);
+
+var nodes = {};
+var curTop = "";
+//Get the data on
+//var nodes_data = {{ json_nodes }};
+var nodes_data = JSON.parse(data.json_nodes);
+
+//console.log(nodes_data);
+//var nodes_data_json = JSON.parse(nodes_data);
+
+var node_positions = {};
+var node_objects = nodes_data;
+
+for(i=0; i<nodes_data.length; i++){
+  //node_obj = {};
+  //console.log("Added: " + node_objects[i].name + " type: " + node_objects[i].type);
+  node_positions[nodes_data[i].name] = i;
+}
+
+
+var w = $(document).width();
+var h = $(document).height();
+console.log($(document).width());
+console.log($(document).height());
+
+
+//Position the rootnode
+var rootX = w/2, rootY = h/2;
+
+// Compute the distinct nodes from the links.
+//[].forEach.call(links,function(link) {
+  links.forEach(function(link) {
+  //console.log(link.source + "->" + link.target);
+  if( link.type != null ){
+    //At root node
+    link.source = nodes[link.source] || (nodes[link.source] = {name: link.source, type: link.type, fixed: true, x: rootX, y: rootY}); 
+  }else{
+    link.source = nodes[link.source] || (nodes[link.source] = {name: link.source, type: link.type}); 
+  }
+
+  link.target = nodes[link.target] || (nodes[link.target] = {name: link.target, type: link.type});
+});
+
+var width = w,
+  height = h,
+  border = 1,
+  bordercolor='black';
+
+  var force = d3.layout.force()
+  .nodes(d3.values(nodes))
+  .links(links)
+  .size([width, height])
+.linkDistance(100) //60
+.charge(-300)
+.on("tick", tick)
+.start();
+
+var svg = d3.select("body").append("svg")
+//.attr("class", "svg-window");
+.attr("width", width)
+.attr("height", height);
+//.attr("border",border);
+
+// var borderPath = svg.append("rect")
+//   .attr("x", 0)
+//   .attr("y", 0)
+//   .attr("height", h)
+//   .attr("width", w)
+//   .style("stroke", bordercolor)
+//   .style("fill", "none")
+//   .style("stroke-width", border);
+
+// Per-type markers, as they don't inherit styles.
+// build the arrowehead
+svg.append("svg:defs").selectAll("marker")
+.data(["end"])
+.enter().append("svg:marker")
+.attr("id", function(d) { return d; })
+.attr("viewBox", "0 -5 10 10")
+.attr("refX", 15)
+.attr("refY", -1.5)
+.attr("markerWidth", 6)
+.attr("markerHeight", 6)
+.attr("orient", "auto")
+.append("svg:path")
+.attr("d", "M0,-5L10,0L0,5");
+
+//console.log("Links:");
+//console.log(force.links());
+/*  Create the link between nodes */
+var path = svg.append("svg:g").selectAll("path")
+.data(force.links())
+.enter().append("svg:path")
+.attr("id", function(d){
+  console.log("id: " + d.source.name + "-" + d.target.name);
+  // if( d.target.source == "root"){
+  //   return d.target.name;
+  // }
+  // else
+    return d.source.name + "-" + d.target.name;
+})
+.attr("class", "link")//function(d) { return "link " + d.type; })
+.attr("marker-end", "url(#end)")//function(d) { return "url(#" + d.type + ")"; });
+.attr('stroke-width', function(d) { 
+  return 1.5; 
+});
+
+
+// The tool tip
+var tip = d3.tip()
+.attr('class', 'd3-tip')
+.offset([-10, 0])
+.html(function(d){
+  //console.log("Sending: " + d.name );
+  return determineTipResult(d);
+});
+
+//Load initial values for the msgs_out of the tip
+$.get("/getaccumulatedrates", function(data) {
+  //console.log("In: Topic is: " + top);
+  for(i=0; i<topics.length; i++){
+    var top = topics[i];
+    
+    var c = $.parseJSON(data)[top];
+    // Get the object to it's natural position
+    console.log("Topic: " + top + " Count: " + c["count"] +" MeanR: " + c["mean_rate"] +" MinRate: " + c["min_rate"]);
+    t_obj = node_objects[node_positions[top]];
+    t_obj.out_msg_count = c["count"];
+    t_obj.out_msg_mean_rate = c["mean_rate"];
+    t_obj.out_msg_one_min_rate = c["min_rate"];
+    // $(".messages #outcount").text(t_obj.out_msg_count);
+    // $(".messages #outmeanrate").text(t_obj.out_msg_mean_rate);
+    // $(".messages #outoneminuterate").text(t_obj.out_msg_one_min_rate);
+  }
+})
+
+function updateTip(tip, element){
+  tip.html(function(element){
+    return determineTipResult(element);
+  });
+}
+
+function determineTipResult(d){
+    //console.log("Requested: " + d.name);
+
+    //Keep track of the currently selected node
+    curTop = d.name;
+    n = node_objects[node_positions[d.name]];
+   //console.log("Got: " + n.name + " type: " + n.type);
+   if( n.type == "topic"){
+    // return "<ul class=\"topic\"><li>Name: <span id=\"name\" style='color:red'>" + n.name + "</span></li><li>Type: <span id=\"type\" style='color:red'>" + n.type + "</span></li><li>One_Minute_Rate(msgs/s): <span id=\"oneminuterate\" style='color:red'>" + n.one_min_rate + "</span></li><li>MeanRate: <span id=\"meanrate\" style='color:red'>" + n.mean_rate + "</span></li><li>Total_Messages: <span id=\"count\" style='color:red'>" + n.count + "</span></li><li>ConnectedServers: <span id=\"weight\" style='color:red'>" + n.weight + "</span></li><li>Timestamp: <span id=\"timestamp\" style='color:red'>" + n.timestamp + "</span></li></ul>";
+    //console.log("FIRST: ");
+    //console.log(JSON.stringify(n));
+    return "<h3 class=\"topic-tip-heading\">Topic: " + n.name + "</h3><table class=\"messages\" border=\"1\"><caption id=\"messages-heading\">Messages</caption><tr><td>Per second</td><td>In</td><td>Out</td></tr><tr><td>One_Min_Rate</td><td><span id=\"inoneminuterate\" style='color:red'>" + n.in_msg_one_min_rate + "</td><td><span id=\"outoneminuterate\" style='color:red'>"+ n.out_msg_one_min_rate + "</td></tr><tr><td>Count</td><td><span id=\"incount\" style='color:red'>" + n.in_msg_count + "</td><td><span id=\"outcount\" style='color:red'>" + n.out_msg_count + "</td></tr><tr><td>Mean_Rate</td><td><span id=\"inmeanrate\" style='color:red'>" + n.in_msg_mean_rate + "</td><td><span id=\"outmeanrate\" style='color:red'>" + n.out_msg_mean_rate + "</td></tr></table><table class=\"bytes\" border=\"1\"><caption id=\"bytes-heading\">Bytes</caption><tr><td>Per second</td><td>In</td><td>Out</td></tr><tr><td>One_Min_Rate</td><td><span id=\"inoneminuterate\" style='color:red'>" + n.in_byte_one_min_rate + "</td><td><span id=\"outoneminuterate\" style='color:red'>" + n.out_byte_one_min_rate + "</td></tr><tr><td>Count</td><td><span id=\"incount\" style='color:red'>" + n.in_byte_count + "</td><td><span id=\"incount\" style='color:red'>" + n.out_byte_count + "</td></tr><tr><td>Mean_Rate</td><td><span id=\"inmeanrate\" style='color:red'>" + n.in_byte_mean_rate + "</td><td><span id=\"outmeanrate\" style='color:red'>" + n.out_byte_mean_rate + "</td></tr></table>";
+  }
+  else if( n.type == "consumer_producer"){
+    return "<h3 class=\"conprod-tip-heading\">Consumer-Producer: " + n.name + "</h3><ul class=\"consumer-producer\"><li>Consumes from: <span style='color:red'>" + n.getsfrom + "</span></li><li>Produces to: <span style='color:red'>" + n.poststo + "</span></li><li>Neighbors: <span style='color:red'>" + n.weight + "</span></li></ul>";
+  }
+  else if( n.type == "consumer"){
+    return "<h3 class=\"con-tip-heading\">Consumer: " + n.name + "</h3><ul class=\"consumer\"><li>Consumes from: <span style='color:red'>" + n.getsfrom + "</span></li><li>Neighbors: <span style='color:red'>" + n.weight + "</span></li></ul>";
+  }
+  else if( n.type == "producer"){
+    return "<h3 class=\"prod-tip-heading\">Producer: " + n.name + "</h3><ul class=\"producer\"><li>Produces to: <span style='color:red'>" + n.poststo + "</span></li><li>Neighbors: <span style='color:red'>" + n.weight + "</span></li></ul>";
+  }
+  else if( n.type == "root"){
+   return "<ul id=\"root\"><li>Name: <span style='color:red'>" + n.name + "</span></li><li>zk_host: <span style='color:red'>" + n.zkhost + ":" + n.zkport + "</span></li></ul>";
+ }
+}
+
+
+//Call the tool tip
+svg.call(tip);
+var circleClicked = null;
+// Create the actual nodes */
+var circle = svg.append("g").selectAll("circle")
+.data(force.nodes())
+.enter().append("circle")
+.attr("r", function(d){
+  //Get the rest of information of the node
+  node = node_objects[node_positions[d.name]];
+  //Radious of circle depends on how many other nodes it is connected to
+  var numNeigh = node.weight;
+  var maxNeigh = data.largest_weight;
+  var minNeigh = data.smallest_weight;
+
+  var maxRad = 16;
+  var minRad = 4;
+
+  //console.log("larg: " + maxNeigh);
+  //console.log("smal: " + minNeigh);
+  if( maxNeigh == minNeigh || minRad == maxRad)
+    return 6;
+  else {
+    return minRad + ((numNeigh - minNeigh)*(maxRad-minRad))/(maxNeigh - minNeigh)
+  }
+  // if( numNeigh == 1 )
+  //   return 4;
+  // if( numNeigh == 2 )
+  //   return 6;
+  // if( numNeigh == 3 )
+  //   return 8;
+  // if( numNeigh == 4 )
+  //   return 10;
+  // if( numNeigh == 5 )
+  //   return 12;
+  // if( numNeigh >= 6 )
+  //   return 14;
+  // else
+  //   return 6;
+})//6
+.attr('id', 'circle')
+.style("fill", function (d) { 
+  //Get the rest of information of the node
+  //console.log("node name is: " + d.name);
+  node = node_objects[node_positions[d.name]];
+  //console.log("obtined: " + node.name);
+
+  //console.log("in fill. node type is: "+ node.name)
+  if(node.name == 'root')
+    return '#d62728'; //RED
+  if(node.type == 'topic')
+    return '#6baed6'; //BLUE
+  if(node.type == 'producer')
+    return '#31a354'; //'#31a354'; //GREEN
+  if(node.type == 'consumer_producer')
+    return '#31a354'; //'#31a354'; //GREEN
+  if(node.type == 'consumer')
+    return '#31a354'; //'#31a354'; //GREEN
+
+})
+.attr("nodes", function(node){
+  //console.log("in new function " + node.name);
+  return node;
+}) 
+.on('mouseover', 
+  function(d){
+    //console.log("Hovering over. Circle clicked is: " + circleClicked);
+    tip.show(d);
+
+
+  })
+.on('mouseout', 
+  function(d){
+    //console.log("Hovering away. Circle clicked is: " + circleClicked);
+    if( circleClicked == null ){
+      tip.hide(d);
+    }
+  })
+.on('dblclick',
+  function(d){
+    //tip.show(d);
+    if( circleClicked == null){
+      //console.log("Circle clicked is: " + circleClicked);
+      circleClicked = d.name;
+      tip.show(d);
+    }else{
+      //console.log("Circle clicked is: " + circleClicked);
+      tip.hide(d);
+      circleClicked = null;
+    }
+  })
+.call(force.drag); // This makes the circles draggable
+
+ //Handle what is clicked
+// $(document).click(function(){
+//   console.log("Circle clicked is: " + circleClicked);
+//   if(circleClicked != null){
+//     circleClicked = null;
+//     $(".d3-tip").hide();
+//   }else{
+//    }
+// });
+
+
+// Displays the name of the node
+var text = svg.append("g").selectAll("text")
+.data(force.nodes())
+.enter().append("text")
+.attr("x", 8)
+.attr("y", ".31em")
+.text(function(d) { 
+  return d.name; 
+});
+
+// Use elliptical arc path segments to doubly-encode directionality.
+function tick() {
+  path.attr("d", linkArc);
+  //path.attr("stroke-width", getWidth)
+  circle.attr("transform", transform);
+  text.attr("transform", transform);
+}
+
+// function getWidth(d){
+//   console.log("d.name: " + d.source);
+//   return 9;
+// }
+function linkArc(d) {
+  var dx = d.target.x - d.source.x,
+  dy = d.target.y - d.source.y,
+      //dr = Math.sqrt(dx * dx + dy * dy); // CURVED
+      dr = 0; // STRAIGHT
+      return "M" + d.source.x + "," + d.source.y + "A" + dr + "," + dr + " 0 0,1 " + d.target.x + "," + d.target.y;
+    }
+
+    function transform(d) {
+      return "translate(" + d.x + "," + d.y + ")";
+    }
+
+/*
+*
+*
+*     END OF D3 GRAPHING STUFF
+*
+*
+*/
 </script>
 
 

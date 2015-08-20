@@ -728,6 +728,31 @@ class extended_client:
 				smallest_node = n
 
 		return smallest_node
+
+	#	Returns the average offset for a particular consumer
+	def get_consumer_offset(self, new_zk, consumer, topic):
+		var = consumers + "/" + consumer + "/offsets/" + topic + "/0"
+		if new_zk.exists(var):
+			payload = str(new_zk.get(var))
+			#print payload
+			deli = '\''
+			
+			beg = payload.index(deli) + 1
+			#print "beg: " + str(beg)
+			end = payload.index(deli, beg)
+			#print "end: " + str(end)
+			offset = payload[beg:end]
+
+			return int(offset)
+		return None
+	
+	def get_accumulated_topic_offset(self, new_zk, topic):
+		con = self.show_topic_consumers(new_zk, topic)
+		accumulated_offset = 0
+		for c in con:
+			offset = int(self.get_consumer_offset(new_zk, c, topic))
+			accumulated_offset = accumulated_offset + offset
+		return accumulated_offset
 	#
 	#
 	#	END OF FUNCTIONS
@@ -753,6 +778,8 @@ zk.start()
 
 #Get broker information
 broker_ids = ext_client.show_brokers_ids(zk)
+offset = ext_client.get_consumer_offset(zk, "node4", "t1")
+#print "Offset is: " + str(offset)
 
 #for bi in broker_ids:
 	#print ext_client.get_broker(zk, bi)
