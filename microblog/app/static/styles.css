@@ -15,6 +15,7 @@ START OF: Styling for zk and test;
 	border : 2px solid #000; 
 	overflow:hidden;
 	height:100%;
+  width:100%;
   min-width: 600px;
   min-height: 500px;
   position: relative;

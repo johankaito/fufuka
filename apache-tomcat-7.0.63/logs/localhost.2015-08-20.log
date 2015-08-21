@@ -1,0 +1,66 @@
+Aug 20, 2015 4:20:37 PM org.apache.catalina.core.ApplicationContext log
+INFO: jolokia-agent: No access restrictor found at classpath:/jolokia-access.xml, access to all MBeans is allowed
+Aug 20, 2015 4:20:47 PM org.apache.catalina.core.ApplicationContext log
+INFO: SessionListener: contextDestroyed()
+Aug 20, 2015 4:20:47 PM org.apache.catalina.core.ApplicationContext log
+INFO: ContextListener: contextDestroyed()
+Aug 20, 2015 4:21:00 PM org.apache.catalina.core.ApplicationContext log
+INFO: jolokia-agent: No access restrictor found at classpath:/jolokia-access.xml, access to all MBeans is allowed
+Aug 20, 2015 4:21:00 PM org.apache.catalina.core.ApplicationContext log
+INFO: ContextListener: contextInitialized()
+Aug 20, 2015 4:21:00 PM org.apache.catalina.core.ApplicationContext log
+INFO: SessionListener: contextInitialized()
+Aug 20, 2015 4:21:00 PM org.apache.catalina.core.ApplicationContext log
+INFO: ContextListener: attributeAdded('org.apache.jasper.compiler.TldLocationsCache', 'org.apache.jasper.compiler.TldLocationsCache@55d3f54c')
+Aug 20, 2015 4:21:31 PM org.apache.catalina.core.ApplicationContext log
+INFO: jolokia-agent: No access restrictor found at classpath:/jolokia-access.xml, access to all MBeans is allowed
+Aug 20, 2015 4:21:38 PM org.apache.catalina.core.ApplicationContext log
+INFO: SessionListener: contextDestroyed()
+Aug 20, 2015 4:21:38 PM org.apache.catalina.core.ApplicationContext log
+INFO: ContextListener: contextDestroyed()
+Aug 20, 2015 4:21:41 PM org.apache.catalina.core.ApplicationContext log
+INFO: jolokia-agent: No access restrictor found at classpath:/jolokia-access.xml, access to all MBeans is allowed
+Aug 20, 2015 4:21:41 PM org.apache.catalina.core.ApplicationContext log
+INFO: ContextListener: contextInitialized()
+Aug 20, 2015 4:21:41 PM org.apache.catalina.core.ApplicationContext log
+INFO: SessionListener: contextInitialized()
+Aug 20, 2015 4:21:41 PM org.apache.catalina.core.ApplicationContext log
+INFO: ContextListener: attributeAdded('org.apache.jasper.compiler.TldLocationsCache', 'org.apache.jasper.compiler.TldLocationsCache@54156670')
+Aug 20, 2015 4:22:32 PM org.apache.catalina.core.ApplicationContext log
+INFO: jolokia-agent: No access restrictor found at classpath:/jolokia-access.xml, access to all MBeans is allowed
+Aug 20, 2015 4:23:12 PM org.apache.catalina.core.ApplicationContext log
+INFO: SessionListener: contextDestroyed()
+Aug 20, 2015 4:23:12 PM org.apache.catalina.core.ApplicationContext log
+INFO: ContextListener: contextDestroyed()
+Aug 20, 2015 4:23:15 PM org.apache.catalina.core.ApplicationContext log
+INFO: jolokia-agent: No access restrictor found at classpath:/jolokia-access.xml, access to all MBeans is allowed
+Aug 20, 2015 4:23:16 PM org.apache.catalina.core.ApplicationContext log
+INFO: ContextListener: contextInitialized()
+Aug 20, 2015 4:23:16 PM org.apache.catalina.core.ApplicationContext log
+INFO: SessionListener: contextInitialized()
+Aug 20, 2015 4:23:16 PM org.apache.catalina.core.ApplicationContext log
+INFO: ContextListener: attributeAdded('org.apache.jasper.compiler.TldLocationsCache', 'org.apache.jasper.compiler.TldLocationsCache@54156670')
+Aug 20, 2015 4:23:18 PM org.apache.catalina.core.ApplicationContext log
+INFO: SessionListener: contextDestroyed()
+Aug 20, 2015 4:23:18 PM org.apache.catalina.core.ApplicationContext log
+INFO: ContextListener: contextDestroyed()
+Aug 20, 2015 4:24:02 PM org.apache.catalina.core.ApplicationContext log
+INFO: jolokia-agent: No access restrictor found at classpath:/jolokia-access.xml, access to all MBeans is allowed
+Aug 20, 2015 4:24:02 PM org.apache.catalina.core.ApplicationContext log
+INFO: ContextListener: contextInitialized()
+Aug 20, 2015 4:24:02 PM org.apache.catalina.core.ApplicationContext log
+INFO: SessionListener: contextInitialized()
+Aug 20, 2015 4:24:02 PM org.apache.catalina.core.ApplicationContext log
+INFO: ContextListener: attributeAdded('org.apache.jasper.compiler.TldLocationsCache', 'org.apache.jasper.compiler.TldLocationsCache@54156670')
+Aug 20, 2015 4:24:33 PM org.apache.catalina.core.ApplicationContext log
+INFO: jolokia-agent: No access restrictor found at classpath:/jolokia-access.xml, access to all MBeans is allowed
+Aug 20, 2015 4:24:33 PM org.apache.catalina.core.ApplicationContext log
+INFO: jolokia-agent: No access restrictor found at classpath:/jolokia-access.xml, access to all MBeans is allowed
+Aug 20, 2015 4:24:33 PM org.apache.catalina.core.ApplicationContext log
+INFO: jolokia-agent: jolokia:type=Config is already registered. Adding it with jolokia:type=Config,uuid=887281a4-1cd0-430e-9919-329954924583, but you should revise your setup in order to either use a qualifier or ensure, that only a single agent gets registered (otherwise history functionality might not work)
+Aug 20, 2015 4:24:33 PM org.apache.catalina.core.ApplicationContext log
+INFO: jolokia-agent: Cannot register (legacy) MBean handler for config store with name jmx4perl:type=Config since it already exists. This is the case if another agent has been already started within the same JVM. The registration is skipped.
+Aug 20, 2015 4:24:33 PM org.apache.catalina.core.ApplicationContext log
+INFO: jolokia-agent: Jolokia Discovery MBean registration is skipped because there is already one registered.
+Aug 20, 2015 4:26:34 PM org.apache.catalina.core.ApplicationContext log
+INFO: jolokia-agent: No access restrictor found at classpath:/jolokia-access.xml, access to all MBeans is allowed

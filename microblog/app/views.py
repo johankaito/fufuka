@@ -23,6 +23,9 @@ from celery import Celery
 #For doing msg_out rate calculations
 import math
 
+#For the timing of things
+import datetime
+
 #messages_in_topic_per_second = 'java -cp $JAVA_HOME/lib/tools.jar:../target/scala-2.10/cjmx.jar cjmx.Main 3628 \"mbeans \'kafka.server:type=BrokerTopicMetrics,name=MessagesInPerSec,*\' select *\"'
 #For getting the process id of kafka
 #import os
@@ -70,7 +73,8 @@ topic_sums = {}
 prev_topic_info = {}
 prev_topic_counts = {}
 
-
+#Proxy server 
+proxy = None
 
 
 #reading_from["data"] = None
@@ -94,7 +98,8 @@ def index():
 #	Gets all the form data from the "Start visualization page"
 @app.route('/', methods=['POST'])
 def index_return_values():
-	print "Index_return_values called"
+	print "/ with data. Form received"
+	start = datetime.datetime.now()
 	#hostname = request.local
 	dictionary = request.form
 	print "Dict: " + str(dictionary) + " :" + str(len(dictionary))
@@ -107,8 +112,12 @@ def index_return_values():
 		reading_from = str(remote)
 		hostname = request.form.get("hostname", None)
 		zkhostnamePort = request.form.get("zkhostnameport", None)
+		proxy = request.form.get("proxy", None)
+
 		print "Connecting to: " + hostname
 		print "With zk at: " + zkhostnamePort
+		global proxy
+		print "Proxy: " + proxy
 		global hostandport
 
 		#Set the remote host
@@ -168,6 +177,8 @@ def index_return_values():
 	json_nodes = json.dumps(ext_client.get_nodes_json(zk))
 	json_edges = json.dumps(ext_client.get_edges_json(zk))
 
+	end = datetime.datetime.now()
+	print "Total time to load zk information: " + str(end-start)
 	return redirect("/zk")
 
 #	Main viewing area for zks
@@ -176,6 +187,8 @@ def zk_client():
 	print "/zk called"
 
 	#Set the consumers then continously calculate their offsets
+	print "Creating consumer holders:"
+	start_time = datetime.datetime.now()
 	global consumers
 	consumers = ext_client.show_all_consumers(zk)
 	#Populate consumer holders
@@ -188,9 +201,8 @@ def zk_client():
 		for t in topics:
 			prev_consumer_info[c][t] = {}
 			#print prev_consumer_info
+	end_time = datetime.datetime.now()
 
-
-	print "Done----"
 	calculate_offsets()
 
 	#Set the template of the page
@@ -200,12 +212,16 @@ def zk_client():
 	#Get the information of the current zookeeper instance
 	data = {}
 	data["zkinfo"] = str(ext_client.url_port)
+
+	print "Total con: " + str(len(consumers))
+	print "Total time to load /zk page: " + str(end_time-start_time)
 	return template.render(data=data)#consumers=consumers, brokers=brokers, producers=producers, topics=topics)#, r=r.content)
 
 #	Loads the d3 graph onto the iframe
 @app.route('/test')
 def test_2():
 	print "/test called"
+	start = datetime.datetime.now()
 	template = env.get_template('test2_graph.html')
 	js_url = url_for('static', filename='js/loadGraph.js')
 	# graph={}
@@ -221,11 +237,13 @@ def test_2():
 	data["reading_from"] = reading_from
 	data["largest_weight"] = ext_client.get_largest_weight(zk)
 	data["smallest_weight"] = ext_client.get_smallest_weight(zk)
+	data["proxy"] = proxy
 	sendData = json.dumps(data)
 	# print "---------------------------"
 	# print "---------------------------"
 	# print "---------------------------"
-
+	end = datetime.datetime.now()
+	print "Total time to load /test page: " + str(end-start)
 	#print data
 	return template.render(data=sendData)#json_data=json_data, json_nodes=json_nodes, json_topics=json_topics, js_url=js_url, host=host, remote_server=remote_server, readingFrom=reading_from)
 

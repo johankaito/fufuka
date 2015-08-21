@@ -463,7 +463,8 @@ setInterval(function(){
     var remote_server = data.remote_server;
     var ports = remote_server.ports;
     var host = remote_server.host;
-
+    var proxy = data.proxy;
+    //console.log("proxy: " + proxy);
     //console.log("Remotely from: " + host + ":" + ports);
     for( i=0; i<ports.length; i++){
       port = ports[i];
@@ -477,7 +478,7 @@ setInterval(function(){
         }
       };
       sendData = JSON.stringify(data1);
-      $.post("http://localhost/jolokia/",
+      $.post("http://" + proxy + "/jolokia/",//"http://localhost/jolokia/",
         sendData,
         function(response, status){
         //console.log("Data: " + response + "\nStatus: " + status);
@@ -497,7 +498,7 @@ setInterval(function(){
         }
       };
       sendData = JSON.stringify(data2);
-      $.post("http://localhost/jolokia/",
+      $.post("http://" + proxy + "/jolokia/",//"http://localhost/jolokia/",
         sendData,
         function(response, status){
         //console.log("Data: " + response + "\nStatus: " + status);
@@ -516,7 +517,7 @@ setInterval(function(){
         }
       };
       sendData = JSON.stringify(data3);
-      $.post("http://localhost/jolokia/",
+      $.post("http://" + proxy + "/jolokia/",//"http://localhost/jolokia/",
         sendData,
         function(response, status){
         if( status == "success" ){
@@ -584,8 +585,8 @@ for(i=0; i<nodes_data.length; i++){
 
 var w = $(document).width();
 var h = $(document).height();
-console.log($(document).width());
-console.log($(document).height());
+//console.log($(document).width());
+//console.log($(document).height());
 
 
 //Position the rootnode
@@ -656,7 +657,7 @@ var path = svg.append("svg:g").selectAll("path")
 .data(force.links())
 .enter().append("svg:path")
 .attr("id", function(d){
-  console.log("id: " + d.source.name + "-" + d.target.name);
+  //console.log("id: " + d.source.name + "-" + d.target.name);
   // if( d.target.source == "root"){
   //   return d.target.name;
   // }
@@ -687,7 +688,7 @@ $.get("/getaccumulatedrates", function(data) {
     
     var c = $.parseJSON(data)[top];
     // Get the object to it's natural position
-    console.log("Topic: " + top + " Count: " + c["count"] +" MeanR: " + c["mean_rate"] +" MinRate: " + c["min_rate"]);
+    //console.log("Topic: " + top + " Count: " + c["count"] +" MeanR: " + c["mean_rate"] +" MinRate: " + c["min_rate"]);
     t_obj = node_objects[node_positions[top]];
     t_obj.out_msg_count = c["count"];
     t_obj.out_msg_mean_rate = c["mean_rate"];

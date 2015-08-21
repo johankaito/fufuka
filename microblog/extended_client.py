@@ -170,6 +170,7 @@ class extended_client:
 		path = consumers + "/" + new_consumer + "/owners"
 		if new_zk.exists(path):
 			return new_zk.get_children(path)
+		return None
 	# 		Get the total number of messages being sent through the cluster
 
 	#	3. 	Get number of messages per partition
@@ -184,7 +185,15 @@ class extended_client:
 	def show_all_consumers(self, new_zk):
 		if new_zk.exists(consumers):
 			#If directory exists
-			return new_zk.get_children(consumers)
+			#Get the consumer and make sure it has topics
+			cons = new_zk.get_children(consumers)
+			to_return = []
+			for c in cons:
+				if self.show_topics_consumed(new_zk, c) is not None:
+					to_return.append(c)
+
+			return to_return
+
 
 	#		Get a particular consumer
 	def get_consumer(self, new_zk, new_consumer):
@@ -219,6 +228,7 @@ class extended_client:
 	# 	7. 	Get the topic listened to by a given consumer group
 	def show_consumer_topics(self, new_zk, new_group):
 		path = consumers + "/" + new_group + "/owners"
+		#print "Getting topics for: " + new_group
 		if new_zk.exists(path):
 			return new_zk.get_children(path)
 
@@ -241,7 +251,10 @@ class extended_client:
 
 	#		Get all the available topics
 	def show_all_topics(self, new_zk):
+		#print "in show all topics"
+		#print "ZK is: " + str(new_zk)
 		if new_zk.exists(topics):
+			#print "topics exist"
 			#for t in new_zk.get_children(topics):
 				#print "In show_all_topics: " + t
 			return new_zk.get_children(topics)

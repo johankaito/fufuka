@@ -54,12 +54,55 @@
     <script type="text/javascript">
 
         //Update the timestamp at the top
+        var startTime = new Date($.now());
         setInterval( function(){
             var time = new Date($.now());
             var data = {{ data }};
-            $("#digraph-legend").text("Zookeeper: " + data.zkinfo  + "    Time: " + time);
+            var upTime = getUpTime(time - startTime);
+            $("#digraph-legend").text("Zookeeper: " + data.zkinfo  + "    Time: " + time + "    Uptime: " + upTime);
         }, 1000);
 
+        function getUpTime(ms){
+            mydate=new Date(ms);
+            if( mydate.getUTCHours() != 0 ){
+                var s = mydate.getUTCSeconds();
+                var m = mydate.getUTCMinutes();
+                var h = mydate.getUTCHours();
+
+                if( s < 10)
+                    s = "0"+s;
+                
+                if( m < 10)
+                    m = "0"+m;
+
+                if( h < 10)
+                    h = "0"+h;
+
+                return h+":"+m+":"+s;
+            } 
+            else if( mydate.getUTCMinutes() != 0 ){
+                var s = mydate.getUTCSeconds();
+                var m = mydate.getUTCMinutes();
+                // console.log("hit 60s: MS is: " + ms);
+                // console.log("s: " + s + "m: " + m);
+
+                if( s < 10)
+                    s = "0"+s;
+                
+                if( m < 10)
+                    m = "0"+m;
+
+                return "00:"+ m + ":" + s; 
+
+            }else{
+                var s = mydate.getUTCSeconds();
+                if( s < 10)
+                    return "00:00:0"+s;
+                else
+                    return "00:00:"+s;
+            }
+            // humandate= mydate.getUTCHours()+" hours, "+mydate.getUTCMinutes()+" minutes and "+mydate.getUTCSeconds()+" second(s)";
+        }
         // $(".wrapper").width($(document).width() - ($(document).width()*0.08));
         // $(".wrapper").height($(document).height() - ($(document).height()*0.08));
         // $("#digraph-fieldset").width($(document).width() - ($(document).width()*0.11));
@@ -70,19 +113,19 @@
         $(window).resize(function() {
             //Resize the diagraph frame
             if( $(window).width() <= 750 ){
-                $(".wrapper").width(700);
+                //$(".wrapper").width(700);
                 $("#digraph-frame").width(680);
                 $("#digraph-fieldset").width(660);
             }else if( $(window).width() <= 900 ){
-                $(".wrapper").width(750);
+                //$(".wrapper").width(750);
                 $("#digraph-frame").width(730);
                 $("#digraph-fieldset").width(710);
             }else if( $(window).width() <= 1300 ){
-                $(".wrapper").width(950);
+                //$(".wrapper").width(950);
                 $("#digraph-frame").width(930);
                 $("#digraph-fieldset").width(910);
             }else{
-                $(".wrapper").width(1300);
+                //$(".wrapper").width(1300);
                 $("#digraph-frame").width(1200);
                 $("#digraph-fieldset").width(1100);
             }
